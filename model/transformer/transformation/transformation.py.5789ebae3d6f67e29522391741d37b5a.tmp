@@ -1,0 +1,46 @@
+import torch
+import torch.nn as nn
+
+class Transformation(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc_layer = []
+        in_channel = 2048
+        for layer in range(2):
+            self.fc_layer.append(nn.Dropout(.1))
+            self.fc_layer.append(nn.Linear(in_channel,512))
+            self.fc_layer.append(nn.BatchNorm(512))
+            self.fc_layer.append(nn.ReLU())
+            in_channel = 512
+        self.fc_layer = nn.Sequential(*self.fc_layer)
+        self.video_emb= nn.Linear(512,256)
+    def forward(self,x):
+        B , T , R = x.shape
+        x = x.reshape(-1,R)
+        x = self.fc_layer(x)
+
+        x = self.video_emb(x)
+        x = x.reshape(B,T,-1)
+        return x
+
+import torch
+import unittest
+from transformation import Transformation
+
+class TestTransformation(unittest.TestCase):
+    def test_transformation(self):
+        # Create a sample input tensor
+        B, T, R = 2, 50, 2048
+        x = torch.randn(B, T, R)
+
+        # Initialize the Transformation class
+        transformation = Transformation()
+
+        # Compute the output of the Transformation class
+        out = transformation(x)
+
+        # Check that the output has the expected shape
+        self.assertEqual(out.shape, (B, T, 256))
+
+if __name__ == '__main__':
+    unittest.main()
