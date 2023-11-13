@@ -404,7 +404,6 @@ def create_data_augment(cfg, augment):
         "mean" : [0.485, 0.456, 0.406],
         "stddev": [0.229, 0.224, 0.225]
     }))
-<<<<<<< HEAD
     return ComposeOp(ops)
 
 def create_simple_augment():
@@ -413,6 +412,4 @@ def create_simple_augment():
         'size': 224
     }))
     ops.append(lambda frames: (frames*2)-1)
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
     return ComposeOp(ops)

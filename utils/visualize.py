@@ -15,10 +15,7 @@ from matplotlib.animation import FuncAnimation  # pylint: disable=g-import-not-a
 import matplotlib.pyplot as plt
 from sklearn import manifold
 import logging
-<<<<<<< HEAD
 import datetime
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +145,6 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
 
     fig, ax = plt.subplots(ncols=2, figsize=(10, 10), tight_layout=True)
 
-<<<<<<< HEAD
     
     def update(i):
         """Update plot with next frame."""
@@ -158,11 +154,6 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
         elif i % len(query_frames)  == 0 :
             logger.info(f"Video created at: {datetime.datetime.now()}, time elapsed: {datetime.datetime.now()-start_time}")
         elif i % 10 == 0:
-=======
-    def update(i):
-        """Update plot with next frame."""
-        if i % 10 == 0:
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             print(f'{i}/{len(query_frames)}')
         ax[0].imshow(unnorm(query_frames[i]))
         ax[1].imshow(unnorm(key_frames[nns[i]]))
@@ -190,10 +181,7 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
             frames=np.arange(len(query_frames)),
             interval=interval,
             blit=False)
-<<<<<<< HEAD
         
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         anim.save(video_path, dpi=80)
 
 

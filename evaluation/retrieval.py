@@ -45,15 +45,12 @@ class Retrieval(object):
             candidate_label = np.concatenate(candidate_label, axis=0)
             dists = cdist(query_feats, candidate_feats, self.dist_type)
             topk = np.argsort(dists, axis=1)[:, :K]
-<<<<<<< HEAD
 
             # logger.info(f"Index :{i}")
             # logger.info(f"candidate_label: {candidate_label}")
             # logger.info(f"dists: {dists}")
             # logger.info(f"topk: {topk}")
 
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             ap = 0
             for t in range(len(query_feats)):
                 ap += np.mean(int(query_label[t]) == candidate_label[topk[t]])

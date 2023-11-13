@@ -6,32 +6,19 @@ import torch
 import torch.nn.functional as F
 from torchvision.io import read_video
 import numpy as np
-<<<<<<< HEAD
 # import utils.dist as du
-=======
-import utils.dist as du
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 import json
 from icecream import ic
 import time
 
 # import utils.logging as logging
-<<<<<<< HEAD
 from dataset.data_augment import create_data_augment,create_ssl_data_augment,create_simple_augment
-=======
-from dataset.data_augment import create_data_augment,create_ssl_data_augment
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
 # logger = logging.get_logger(__name__)
 
 class Skating(torch.utils.data.Dataset):
-<<<<<<< HEAD
     def __init__(self,cfg,split,sample_all=False,algo=None,train=None):
         # cfg.PATH_TO_DATASET = '/home/c1l1mo/datasets/new_boxing_no_overlapped'
-=======
-    def __init__(self,cfg,split,sample_all=False,algo=None):
-        # cfg.PATH_TO_DATASET = '/home/yuansu/datasets/new_boxing_no_overlapped'
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
         self.cfg = cfg
         self.split = split
@@ -42,11 +29,8 @@ class Skating(torch.utils.data.Dataset):
         self.mode = split
         self.algo = algo
 
-<<<<<<< HEAD
         self.train = train
 
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         with open(os.path.join(cfg.PATH_TO_DATASET, self.mode + '.pkl'), 'rb') as f:
             self.dataset = pickle.load(f)
         
@@ -54,15 +38,9 @@ class Skating(torch.utils.data.Dataset):
             # logger.info(f"{len(self.dataset)} {self.split} samples of Pouring dataset have been read.")
             seq_lens = [data['seq_len'] for data in self.dataset]
             hist, bins = np.histogram(seq_lens, bins='auto')
-<<<<<<< HEAD
             # if du.is_root_proc():
             print(list(bins.astype(np.int)))
             print(list(hist))
-=======
-            if du.is_root_proc():
-                print(list(bins.astype(np.int)))
-                print(list(hist))
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
         if self.mode=="train" and cfg.TRAINING_ALGO == 'classification':
             num_train = max(1, int(cfg.DATA.FRACTION * len(self.dataset)))
@@ -72,15 +50,10 @@ class Skating(torch.utils.data.Dataset):
         # Perform data-augmentation
         if self.cfg.SSL and self.mode=="train" :
             self.data_preprocess,self.b4_norm = create_ssl_data_augment(cfg, augment=True)
-<<<<<<< HEAD
         elif self.mode=="train" and not self.cfg.DATA.SIMPLE_PREPROCESS:
             self.data_preprocess = create_data_augment(cfg, augment=True)
         elif hasattr(self.cfg.DATA, "SIMPLE_PREPROCESS") and self.cfg.DATA.SIMPLE_PREPROCESS:
             self.data_preprocess = lambda x:((x * 255.0)  / 127.5) - 1.0
-=======
-        elif self.mode=="train":
-            self.data_preprocess = create_data_augment(cfg, augment=True)
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         else:
             self.data_preprocess = create_data_augment(cfg, augment=False)
 
@@ -96,17 +69,12 @@ class Skating(torch.utils.data.Dataset):
         name = self.dataset[index]["name"]
         frame_label = self.dataset[index]["frame_label"]
         seq_len = self.dataset[index]["seq_len"]
-<<<<<<< HEAD
         if self.train is not None:
             video = torch.from_numpy(self.train[index]["video"])
             print(self.train[index]['name'])
         else:
             video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["video_file"])
             video, _, info = read_video(video_file, pts_unit='sec')
-=======
-        video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["video_file"])
-        video, _, info = read_video(video_file, pts_unit='sec')
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         video = video.permute(0,3,1,2).float() / 255.0 # T H W C -> T C H W, [0,1] tensor
 
         skeleton = 0
@@ -146,14 +114,9 @@ class Skating(torch.utils.data.Dataset):
 
                 skeleton = torch.from_numpy(np.array(list(tmp_skeleton.values()))).type_as(video)
 
-<<<<<<< HEAD
         if self.train is None:
             assert len(video) == seq_len
             assert len(video) == len(frame_label)
-=======
-        assert len(video) == seq_len
-        assert len(video) == len(frame_label)
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
         if self.cfg.SSL and not self.sample_all and self.algo=="scl":
             names = [name, name]
@@ -207,10 +170,7 @@ class Skating(torch.utils.data.Dataset):
             if seq_len >= num_frames:
                 steps = torch.randperm(seq_len) # Returns a random permutation of integers from 0 to n - 1.
                 steps = torch.sort(steps[:num_frames])[0]
-<<<<<<< HEAD
-                steps = torch.tensor([0,1,3,5,6,7,8,9,13,14,15,16,17,19,20,21,22,23,25,26])
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
+                # steps = torch.tensor([0,1,3,5,6,7,8,9,13,14,15,16,17,19,20,21,22,23,25,26])
             else:
                 steps = torch.arange(0, num_frames)
         elif sampling_strategy == 'time_augment':
@@ -248,7 +208,6 @@ class Skating(torch.utils.data.Dataset):
 
 import unittest
 from easydict import EasyDict as edict
-<<<<<<< HEAD
 import random
 import yaml
 
@@ -270,23 +229,13 @@ class TestSkating(unittest.TestCase):
         self.setup_seed(7)
         self.cfg = edict({
             'PATH_TO_DATASET': '/home/c1l1mo/datasets/processed_axel_trimmed',
-=======
-
-class TestSkating(unittest.TestCase):
-    def setUp(self):
-        self.cfg = edict({
-            'PATH_TO_DATASET': '/home/yuansu/datasets/processed_axel_trimmed',
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             'DATA': {
                 'NUM_CONTEXTS': 1,
                 'SAMPLING_STRATEGY': 'offset_uniform',
                 'SAMPLE_ALL_STRIDE': 2,
                 'FRACTION': 1.0,
                 'SKELETON': True,
-<<<<<<< HEAD
                 'SIMPLE_PREPROCESS': True,
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             },
             'TRAIN': {
                 'NUM_FRAMES': 20
@@ -308,7 +257,6 @@ class TestSkating(unittest.TestCase):
             },
             'IMAGE_SIZE': 224
         })
-<<<<<<< HEAD
         
         with open("/home/c1l1mo/projects/VideoAlignment/result/conv_processed_axel_trimmed2/config.yaml",'r') as f:
             self.cfg = edict(yaml.safe_load(f))
@@ -316,38 +264,23 @@ class TestSkating(unittest.TestCase):
         self.split = 'train'
         self.sample_all = False
         self.dataset = Skating(self.cfg, self.split, self.sample_all, train=train)
-=======
-        self.split = 'train'
-        self.sample_all = False
-        self.dataset = Skating(self.cfg, self.split, self.sample_all)
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
     def test_len(self):
         self.assertIsInstance(len(self.dataset), int)
 
     def test_getitem(self):
         np.set_printoptions(threshold=np.inf)
-<<<<<<< HEAD
         index = 12
         print("fetching ...")
         origin_video,video, label, seq_len, chosen_steps, video_mask, name,skeleton = self.dataset[index]
-=======
-        index = 11
-        video, label, seq_len, chosen_steps, video_mask, name,skeleton = self.dataset[index]
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         self.assertIsInstance(video, torch.Tensor)
         self.assertIsInstance(label, torch.Tensor)
         self.assertIsInstance(seq_len, torch.Tensor)
         self.assertIsInstance(chosen_steps, torch.Tensor)
         self.assertIsInstance(video_mask, torch.Tensor)
         self.assertIsInstance(name, str)
-<<<<<<< HEAD
         ic(name,video[0].permute(0,2,3,1),video[0].shape)
         ic(chosen_steps)
-=======
-        for c,s in zip(chosen_steps,skeleton):
-            ic(c,s)
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
 if __name__ == '__main__':
     unittest.main()

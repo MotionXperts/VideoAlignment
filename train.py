@@ -54,10 +54,6 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
     if du.is_root_proc():
         trainloader = tqdm(trainloader,total=len(trainloader))
     for cur_iter,(original_video,video,label,seq_len,steps,mask,name,skeleton) in enumerate(trainloader):
-<<<<<<< HEAD
-
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         if cur_iter ==0:
             DEBUG = True
         else:
@@ -156,11 +152,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                     input_video = video[steps.long()]
                     input_video = input_video.unsqueeze(0)
                     with torch.cuda.amp.autocast():
-<<<<<<< HEAD
                         emb_feats = model(input_video,video_mask=None,skeleton=skeleton,split="eval")
-=======
-                        emb_feats = model(input_video,video_mask=None,skelton=skeleton,split="eval")
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
                 
                 
                 embs.append(emb_feats[0].cpu())
@@ -231,11 +223,7 @@ def main():
             group = "DDP",
             name=cfg.LOGDIR.split('/')[-1],
             tags=[cfg.TRAINING_ALGO.split("/")[-1],cfg.PATH_TO_DATASET],
-<<<<<<< HEAD
             dir="/home/c1l1mo/tmp/",
-=======
-            dir="/home/yuansu/tmp/",
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             settings=wandb.Settings(_disable_stats=True),
             # id='zxbv9pzm', resume=True, ## resume run
         )
@@ -249,21 +237,12 @@ def main():
 
     if cfg.TRAINING_ALGO=='tcc_scl_tcc':
         train_loaders["TCC"],train_samplers["TCC"],train_eval_loaders["TCC"] = construct_dataloader(cfg, 'train',"tcc")
-<<<<<<< HEAD
         test_loaders ["TCC"],_                    ,test_eval_loaders ["TCC"] = construct_dataloader(cfg, args.demo_or_inference ,"tcc")
         train_loaders["SCL"],train_samplers["SCL"],train_eval_loaders["SCL"] = construct_dataloader(cfg, 'train',"scl")
         test_loaders ["SCL"],_                    ,test_eval_loaders ["SCL"] = construct_dataloader(cfg, args.demo_or_inference ,"scl")
     else:
         train_loaders[cfg.TRAINING_ALGO.upper()],train_samplers[cfg.TRAINING_ALGO.upper()], train_eval_loaders[cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'train',cfg.TRAINING_ALGO)
         test_loaders [cfg.TRAINING_ALGO.upper()], _                                       , test_eval_loaders [cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'test',cfg.TRAINING_ALGO)
-=======
-        test_loaders ["TCC"],_                    ,test_eval_loaders ["TCC"] = construct_dataloader(cfg, 'val' ,"tcc")
-        train_loaders["SCL"],train_samplers["SCL"],train_eval_loaders["SCL"] = construct_dataloader(cfg, 'train',"scl")
-        test_loaders ["SCL"],_                    ,test_eval_loaders ["SCL"] = construct_dataloader(cfg, 'val' ,"scl")
-    else:
-        train_loaders[cfg.TRAINING_ALGO.upper()],train_samplers[cfg.TRAINING_ALGO.upper()], train_eval_loaders[cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'train',cfg.TRAINING_ALGO)
-        test_loaders [cfg.TRAINING_ALGO.upper()], _                                       , test_eval_loaders [cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'val',cfg.TRAINING_ALGO)
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
 
     algo = {"TCC":TCC(cfg),"SCL":SCL(cfg)}
@@ -291,7 +270,6 @@ def main():
             train_sampler.set_epoch(epoch)
             train(cfg,algo,model,train_loader,optimizer,scheduler,epoch,summary_writer,DEBUG=args.debug,current_algo=current_algo)
             if epoch % 100 == 0:
-<<<<<<< HEAD
                 if du.is_root_proc():
                     if epoch != 0:
                         evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test",tsNE_only=True)
@@ -299,24 +277,12 @@ def main():
                 val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
                 if du.is_root_proc():
                     save_checkpoint(cfg,model,optimizer,epoch)
-=======
-                val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
-                if du.is_root_proc():
-                    if epoch != 0:
-                        evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test",tsNE_only=True)
-            if du.is_root_proc() and epoch +1 % 20 ==0:
-                save_checkpoint(cfg,model,optimizer,epoch)
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             du.synchronize()
     except Exception as e:
         print(traceback.format_exc())
         print(f"{e} occured, saving model before quitting.")
     finally:
-<<<<<<< HEAD
         # save_checkpoint(cfg,model,optimizer,epoch)
-=======
-        save_checkpoint(cfg,model,optimizer,epoch)
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         dist.destroy_process_group()
 
 if __name__ == '__main__':
