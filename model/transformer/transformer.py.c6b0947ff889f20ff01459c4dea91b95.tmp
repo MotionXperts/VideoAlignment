@@ -1,0 +1,40 @@
+import torch
+import torch.nn as nn
+from encoder.encoder import Encoder
+from resnet50.resnet50 import ResNet50
+from transformation.transformation import Transformation
+
+class CARL(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.resnet50 = ResNet50()
+        self.transformation = Transformation()
+        self.encoder = Encoder(256,.1,256)
+    def forward(self,x,video_mask):
+        x = self.resnet50(x)
+        x = self.transformation(x)
+        x = self.encoder(x)
+        return x
+
+import torch
+import unittest
+from transformer import CARL
+
+class TestCARL(unittest.TestCase):
+    def test_carl(self):
+        # Create a sample input tensor
+        B, T, C, W, H = 2, 50, 3, 224, 224
+        x = torch.randn(B, T, C, W, H)
+        video_mask = torch.ones(B, T)
+
+        # Initialize the CARL class
+        carl = CARL()
+
+        # Compute the output of the CARL class
+        out = carl(x, video_mask)
+
+        # Check that the output has the expected shape
+        self.assertEqual(out.shape, (B, 256, T))
+
+if __name__ == '__main__':
+    unittest.main()
