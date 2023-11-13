@@ -10,7 +10,11 @@ CONFIG = edict()
 # ******************************************************************************
 
 # Directory for the experiment logs.
+<<<<<<< HEAD
 CONFIG.LOGDIR = '/home/c1l1mo/projects/VideoAlignment/result'
+=======
+CONFIG.LOGDIR = '/home/yuansu/projects/VideoAlignment/result'
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 # Dataset for training TCC.
 # Check dataset_splits.py for full list.
 CONFIG.DATASETS = [
@@ -60,7 +64,11 @@ CONFIG.TRAIN.MAX_EPOCHS = 500
 # Number of samples in each batch.
 CONFIG.TRAIN.BATCH_SIZE = 2
 # Number of frames to use while training.
+<<<<<<< HEAD
 CONFIG.TRAIN.NUM_FRAMES = 20
+=======
+CONFIG.TRAIN.NUM_FRAMES = 240
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 CONFIG.TRAIN.SCL_BATCH_SIZE = 1
 CONFIG.TRAIN.TCC_BATCH_SIZE = 2
 

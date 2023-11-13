@@ -87,10 +87,17 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
             KD.evaluate(dataset,epoch,summary_writer,split=split)
             RE.evaluate(dataset,epoch,summary_writer,split=split)
 
+<<<<<<< HEAD
             queries = []
             candidates = []
 
             for _ in range(15):
+=======
+            queries = [3]
+            candidates = [8]
+
+            for _ in range(5):
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
                 queries.append(np.random.randint(0,len(names_list)))
                 candidates.append(np.random.randint(0,len(names_list)))
             # queries=  [23,25,28,4,4]
@@ -131,8 +138,13 @@ def main():
             weight_decay=cfg.OPTIMIZER.WEIGHT_DECAY,)
     summary_writer = SummaryWriter(os.path.join(cfg.LOGDIR, 'train_logs'))
 
+<<<<<<< HEAD
     trainloader,train_sampler, train_eval_loader = construct_dataloader(cfg, 'train',cfg.TRAINING_ALGO.split("_")[0])
     testloader,_, test_eval_loader = construct_dataloader(cfg, args.demo_or_inference,cfg.TRAINING_ALGO.split("_")[0])
+=======
+    trainloader,train_sampler, train_eval_loader = construct_dataloader(cfg, 'train')
+    testloader,_, test_eval_loader = construct_dataloader(cfg, args.demo_or_inference)
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
     algo = {"TCC":TCC(cfg),"CARL_TCC":CARL_TCC(cfg)}    
     KD = KendallsTau(cfg)

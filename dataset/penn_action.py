@@ -33,7 +33,11 @@ PENN_ACTION_LIST = [
 
 class PennAction(torch.utils.data.Dataset):
     def __init__(self, cfg, split, dataset_name=None, mode="auto", sample_all=False , algo=None):
+<<<<<<< HEAD
         # logging.basicConfig(level=logging.INFO, format='%(asctime)s %(lineno)d: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',filename=os.path.join(cfg.LOGDIR,'stdout.log'))
+=======
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(lineno)d: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',filename=os.path.join(cfg.LOGDIR,'stdout.log'))
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         self.cfg = cfg
         self.split = split
         if mode == "auto":
@@ -222,7 +226,11 @@ import unittest
 class TestPennAction(unittest.TestCase):
     def setUp(self):
         self.cfg = {
+<<<<<<< HEAD
             'PATH_TO_DATASET': '/home/c1l1mo/datasets/penn_action',
+=======
+            'PATH_TO_DATASET': '/home/yuansu/datasets/penn_action',
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             'LOGDIR': './',
             'DATA': {
                 'NUM_CONTEXTS': 1,
@@ -261,7 +269,13 @@ class TestPennAction(unittest.TestCase):
 
     def test_getitem(self):
         for d in self.dataset:
+<<<<<<< HEAD
             print(len(d))
+=======
+            if d[6] == "2156_tennis_serve":
+                ic(d[6])
+                ic(len(self.dataset))
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             # self.assertIsInstance(item, tuple)
 
 if __name__ == '__main__':

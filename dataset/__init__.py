@@ -82,7 +82,11 @@ class TestConstructDataloader(unittest.TestCase):
             "squat",
             "tennis_forehand",
             "tennis_serve"]
+<<<<<<< HEAD
         cfg.PATH_TO_DATASET = os.path.join("/home/c1l1mo/datasets", "penn_action")
+=======
+        cfg.PATH_TO_DATASET = os.path.join("/home/yuansu/datasets", "penn_action")
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         split = 'train'
 
         dataloader,_, eval_dataloader = construct_dataloader(cfg, split,algo="tcc")

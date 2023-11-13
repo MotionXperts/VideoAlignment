@@ -1,5 +1,9 @@
 import sys
+<<<<<<< HEAD
 sys.path.append('/home/c1l1mo/projects/VideoAlignment/model')
+=======
+sys.path.append('/home/yuansu/projects/VideoAlignment/model')
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 from transformer.resnet50.resnet50 import ResNet50
 import torch 
 import torch.nn as nn
@@ -29,7 +33,11 @@ class Conv(nn.Module):
             nn.ReLU(True),
         )
         self.embedding_layer = nn.Linear(256,embed_size)
+<<<<<<< HEAD
     def forward(self,x,video_mask=None,skeleton=None,split=""):
+=======
+    def forward(self,x,video_mask=None): ## mask is just a dummy varaible for compatibility with transformer
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         B , T , C , H , W = x.shape
         x = self.resnet(x)
         x = self.dropout(x)
@@ -61,7 +69,11 @@ class Embedder(nn.Module):
     self.embedding_layer = nn.Linear(256, embedding_size)
     self.dropout = nn.Dropout(p=0.1)
   
+<<<<<<< HEAD
   def forward(self, frames,video_mask=None,skeleton=None):
+=======
+  def forward(self, frames):
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
     B , T , C , H , W = frames.shape
 
     x = self.resnet(frames)

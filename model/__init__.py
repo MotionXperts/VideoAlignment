@@ -18,9 +18,14 @@ def save_checkpoint(cfg, model, optimizer, epoch):
         "optimizer_state": optimizer.state_dict(),
         "cfg": cfg,
     }
+<<<<<<< HEAD
     if not os.path.exists(ckpt_path):
         torch.save(checkpoint, ckpt_path)
         print(f"Saving epoch {epoch} checkpoint at {ckpt_path}")
+=======
+    torch.save(checkpoint, ckpt_path)
+    print(f"Saving epoch {epoch} checkpoint at {ckpt_path}")
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
 
 def load_checkpoint(cfg,model,optimizer,name=None):
     checkpoint_dir = os.path.join(cfg.LOGDIR, "checkpoints")
@@ -46,8 +51,13 @@ def build_model(cfg):
     if cfg.args.carl:
         return CARL_Transformer(cfg,test=False)
     elif cfg.MODEL.EMBEDDER_TYPE=='transformer':
+<<<<<<< HEAD
         print("BUILDING TRANSFORMER")
         return CARL(cfg)
     else:
         print("BUILDING CONV")
+=======
+        return CARL(cfg)
+    else:
+>>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         return Conv(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,cfg.MODEL.EMBEDDER_MODEL.FC_DROPOUT_RATE,cfg.DATA.NUM_CONTEXTS)
