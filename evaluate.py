@@ -1,9 +1,9 @@
+import os,sys
+os.environ['NUMEXPR_MAX_THREADS'] = '16'
 import warnings
 warnings.filterwarnings("ignore",category=UserWarning)
 warnings.filterwarnings("ignore",category=FutureWarning)
 
-import os,sys
-import math
 import torch
 import random
 import numpy as np
@@ -22,6 +22,11 @@ from evaluation.retrieval import Retrieval
 from model import load_checkpoint,build_model
 from torch.utils.tensorboard import SummaryWriter
 from icecream import ic
+
+import logging
+
+pylogger = logging.getLogger("torch.distributed")
+pylogger.setLevel(logging.ERROR)
 
 def setup_seed(seed):
     random.seed(seed)                          
@@ -87,11 +92,12 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
             KD.evaluate(dataset,epoch,summary_writer,split=split)
             RE.evaluate(dataset,epoch,summary_writer,split=split)
 
-            queries = []
-            candidates = []
+            queries = [134]
+            candidates = [44]
 
             for _ in range(15):
-                queries.append(np.random.randint(0,len(names_list)))
+                # queries.append(np.random.randint(0,len(names_list)))
+                queries.append(134)
                 candidates.append(np.random.randint(0,len(names_list)))
             # queries=  [23,25,28,4,4]
             # candidates = [8,26,14,25,16]

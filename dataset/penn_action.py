@@ -261,13 +261,7 @@ class TestPennAction(unittest.TestCase):
 
     def test_getitem(self):
         for d in self.dataset:
-<<<<<<< HEAD
             print(len(d))
-=======
-            if d[6] == "2156_tennis_serve":
-                ic(d[6])
-                ic(len(self.dataset))
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
             # self.assertIsInstance(item, tuple)
 
 if __name__ == '__main__':

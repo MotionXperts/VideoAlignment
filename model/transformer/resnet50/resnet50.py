@@ -10,11 +10,8 @@ class ResNet50(nn.Module):
         model = models.resnet50(pretrained=True)
         self.tcc = tcc
         self.backbone = nn.Sequential(*list(model.children())[:-3])
-<<<<<<< HEAD
         for param in self.backbone.parameters():
             param.requires_grad = False
-=======
->>>>>>> 47fcb3a6ee4422a4b608b29e8779874a74efa406
         self.finetune = list(model.children())[-3]
         self.pooling = nn.AdaptiveMaxPool2d(1)
     def forward(self,x):

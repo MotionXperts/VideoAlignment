@@ -6,15 +6,15 @@ import torch
 import torch.nn.functional as F
 from torchvision.io import read_video
 import numpy as np
-# import utils.dist as du
+import utils.dist as du
 import json
 from icecream import ic
 import time
 
-# import utils.logging as logging
+import logging
 from dataset.data_augment import create_data_augment,create_ssl_data_augment,create_simple_augment
 
-# logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 class Skating(torch.utils.data.Dataset):
     def __init__(self,cfg,split,sample_all=False,algo=None,train=None):
@@ -31,6 +31,10 @@ class Skating(torch.utils.data.Dataset):
 
         self.train = train
 
+        self.simple_preprocess = False
+        if hasattr(self.cfg.DATA, "SIMPLE_PREPROCESS") and self.cfg.DATA.SIMPLE_PREPROCESS:
+            self.simple_preprocess = True
+
         with open(os.path.join(cfg.PATH_TO_DATASET, self.mode + '.pkl'), 'rb') as f:
             self.dataset = pickle.load(f)
         
@@ -38,9 +42,9 @@ class Skating(torch.utils.data.Dataset):
             # logger.info(f"{len(self.dataset)} {self.split} samples of Pouring dataset have been read.")
             seq_lens = [data['seq_len'] for data in self.dataset]
             hist, bins = np.histogram(seq_lens, bins='auto')
-            # if du.is_root_proc():
-            print(list(bins.astype(np.int)))
-            print(list(hist))
+            if du.is_root_proc():
+                logger.info(list(bins.astype(np.int)))
+                logger.info(list(hist))
 
         if self.mode=="train" and cfg.TRAINING_ALGO == 'classification':
             num_train = max(1, int(cfg.DATA.FRACTION * len(self.dataset)))
@@ -50,9 +54,9 @@ class Skating(torch.utils.data.Dataset):
         # Perform data-augmentation
         if self.cfg.SSL and self.mode=="train" :
             self.data_preprocess,self.b4_norm = create_ssl_data_augment(cfg, augment=True)
-        elif self.mode=="train" and not self.cfg.DATA.SIMPLE_PREPROCESS:
+        elif self.mode=="train" and not self.simple_preprocess:
             self.data_preprocess = create_data_augment(cfg, augment=True)
-        elif hasattr(self.cfg.DATA, "SIMPLE_PREPROCESS") and self.cfg.DATA.SIMPLE_PREPROCESS:
+        elif self.simple_preprocess:
             self.data_preprocess = lambda x:((x * 255.0)  / 127.5) - 1.0
         else:
             self.data_preprocess = create_data_augment(cfg, augment=False)
@@ -64,7 +68,6 @@ class Skating(torch.utils.data.Dataset):
         return len(self.dataset)
 
     def __getitem__(self, index):
-        id = self.dataset[index]["id"]
         
         name = self.dataset[index]["name"]
         frame_label = self.dataset[index]["frame_label"]

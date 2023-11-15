@@ -17,6 +17,7 @@ class TCC():
         self.temperature = cfg.TCC.SOFTMAX_TEMPERATURE
         self.lambda_ = cfg.TCC.VARIANCE_LAMBDA
         self.normalize_indices = cfg.TCC.NORMALIZE_INDICES
+        self.cfg = cfg
     def compute_cycle_loss(self,emb_x,emb_y,DEBUG=False,images=None,summary_writer=None,epoch=None,split="train"):
         """
         1. Find the distance for emb_x in emb_y (using l2)
@@ -26,13 +27,20 @@ class TCC():
         """
         num_steps, D = emb_x.shape
 
-        distance = -1 * torch.cdist(emb_x,emb_y,p=2).pow(2)
-        distance = distance / D / self.temperature
+        if self.cfg.TCC.SIMILARITY_TYPE == 'l2':
+            distance = -1 * torch.cdist(emb_x,emb_y,p=2).pow(2)
+            distance = distance / D / self.temperature
 
+            sftmax = torch.softmax(distance,dim=-1)
+            emb_y = torch.matmul(sftmax,emb_y)
+            logits = -1 * torch.cdist(emb_y,emb_x,p=2).pow(2) / D / self.temperature
+        else:
+            distance = torch.matmul(emb_x,emb_y.T)
+            distance = distance / D / self.temperature
 
-        sftmax = torch.softmax(distance,dim=-1)
-        emb_y = torch.matmul(sftmax,emb_y)
-        logits = -1 * torch.cdist(emb_y,emb_x,p=2).pow(2) / D / self.temperature
+            sftmax = torch.softmax(distance,dim=-1)
+            emb_y = torch.matmul(sftmax,emb_y)
+            logits = torch.matmul(emb_y,emb_x.T) / D / self.temperature
 
         if DEBUG and du.is_root_proc() and summary_writer is not None:
             ## images: B , T , H , W
@@ -99,10 +107,6 @@ class TCC():
         i = torch.sum(steps*labels,dim=-1)
         mean = torch.sum(steps*beta,dim=-1)
         variance = torch.sum(torch.square(steps-mean.unsqueeze(1)) * beta ,dim=-1)
-        # if DEBUG:
-        #     logger.info(f"beta: \n{beta}")
-        #     logger.info(f"logits: \n{logits}")
-        #     logger.info(f"{torch.square(steps - mean.unsqueeze(-1)) * beta}\nsteps: \n{steps}\nmean: {mean}")
         log_variance = torch.log(variance)
         Lcbr = torch.mean(torch.square(i-mean) / variance + self.lambda_ * log_variance)
         return Lcbr

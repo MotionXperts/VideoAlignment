@@ -1,9 +1,10 @@
+import os,sys
+os.environ['NUMEXPR_MAX_THREADS'] = '16'
 import warnings
 warnings.filterwarnings("ignore",category=UserWarning)
 warnings.filterwarnings("ignore",category=FutureWarning)
 import traceback
 import wandb
-import os,sys
 import math
 import torch
 import random
@@ -30,6 +31,8 @@ from icecream import ic
 
 ic.disable()
 
+pylogger = logging.getLogger("torch.distributed")
+pylogger.setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 def setup_seed(seed):
@@ -54,10 +57,6 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
     if du.is_root_proc():
         trainloader = tqdm(trainloader,total=len(trainloader))
     for cur_iter,(original_video,video,label,seq_len,steps,mask,name,skeleton) in enumerate(trainloader):
-        if cur_iter ==0:
-            DEBUG = True
-        else:
-            DEBUG = False
         optimizer.zero_grad()
         scaler = torch.cuda.amp.GradScaler()
         # with torch.cuda.amp.autocast():
@@ -113,7 +112,8 @@ def val(algo,model,testloader,cur_epoch,summary_writer,current_algo=None):
                 wandb.log({f"val/loss": total_loss,"custom_step": cur_epoch})
             except:
                 pass
-            print(f"validation loss: {total_loss:.3f}")
+
+            logger.info(f"epoch: {cur_epoch}, validation loss: {total_loss:.3f}")
 
 def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_only=True):
     embs_list = []
@@ -236,13 +236,13 @@ def main():
     test_eval_loaders = {}
 
     if cfg.TRAINING_ALGO=='tcc_scl_tcc':
-        train_loaders["TCC"],train_samplers["TCC"],train_eval_loaders["TCC"] = construct_dataloader(cfg, 'train',"tcc")
+        train_loaders["TCC"],train_samplers["TCC"],train_eval_loaders["TCC"] = construct_dataloader(cfg, 'untrimmed_train',"tcc")
         test_loaders ["TCC"],_                    ,test_eval_loaders ["TCC"] = construct_dataloader(cfg, args.demo_or_inference ,"tcc")
-        train_loaders["SCL"],train_samplers["SCL"],train_eval_loaders["SCL"] = construct_dataloader(cfg, 'train',"scl")
+        train_loaders["SCL"],train_samplers["SCL"],train_eval_loaders["SCL"] = construct_dataloader(cfg, 'untrimmed_train',"scl")
         test_loaders ["SCL"],_                    ,test_eval_loaders ["SCL"] = construct_dataloader(cfg, args.demo_or_inference ,"scl")
     else:
         train_loaders[cfg.TRAINING_ALGO.upper()],train_samplers[cfg.TRAINING_ALGO.upper()], train_eval_loaders[cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'train',cfg.TRAINING_ALGO)
-        test_loaders [cfg.TRAINING_ALGO.upper()], _                                       , test_eval_loaders [cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'test',cfg.TRAINING_ALGO)
+        test_loaders [cfg.TRAINING_ALGO.upper()], _                                       , test_eval_loaders [cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'val',cfg.TRAINING_ALGO)
 
 
     algo = {"TCC":TCC(cfg),"SCL":SCL(cfg)}
@@ -270,6 +270,7 @@ def main():
             train_sampler.set_epoch(epoch)
             train(cfg,algo,model,train_loader,optimizer,scheduler,epoch,summary_writer,DEBUG=args.debug,current_algo=current_algo)
             if epoch % 100 == 0:
+                val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
                 if du.is_root_proc():
                     if epoch != 0:
                         evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test",tsNE_only=True)

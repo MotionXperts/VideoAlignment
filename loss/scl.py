@@ -53,6 +53,7 @@ class SCL(object):
         return loss
 
     def compute_loss(self, embs,seq_lens,steps, masks=None, **kargs):
+        ic(embs.shape)
         B , T , C = embs.shape
         embs = embs.view(B//2,2,T,C)
         batch_size, num_views, num_frames, channels = embs.shape

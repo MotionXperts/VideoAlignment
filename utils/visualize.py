@@ -17,6 +17,8 @@ from sklearn import manifold
 import logging
 import datetime
 
+
+logging.getLogger('matplotlib.animation').setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 EPSILON = 1e-7
@@ -116,7 +118,7 @@ def viz_tSNE(embs,frames,output_path,use_dtw=False,query=0):
     plt.xticks([])
     plt.yticks([])
     plt.savefig(output_path)
-    plt.close()
+    plt.close('all')
 
 def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use_dtw, interval=50, time_stride=1, image_out=False,
     tsNE_only=False):
@@ -145,15 +147,11 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
 
     fig, ax = plt.subplots(ncols=2, figsize=(10, 10), tight_layout=True)
 
+    start_time = datetime.datetime.now()
     
     def update(i):
         """Update plot with next frame."""
-        if i ==0:
-            start_time = datetime.datetime.now()
-            logger.info(f"Start creating video at: {start_time}")
-        elif i % len(query_frames)  == 0 :
-            logger.info(f"Video created at: {datetime.datetime.now()}, time elapsed: {datetime.datetime.now()-start_time}")
-        elif i % 10 == 0:
+        if i % 10 == 0:
             print(f'{i}/{len(query_frames)}')
         ax[0].imshow(unnorm(query_frames[i]))
         ax[1].imshow(unnorm(key_frames[nns[i]]))
@@ -180,9 +178,11 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
             update,
             frames=np.arange(len(query_frames)),
             interval=interval,
-            blit=False)
+            blit=True)
         
         anim.save(video_path, dpi=80)
+        logger.info(f"Video saved, time elapsed: {datetime.datetime.now()-start_time}")
+        plt.close('all')
 
 
 def create_multiple_video(query_embs, query_frames, key_embs_list, key_frames_list, video_path, use_dtw, 
@@ -216,7 +216,7 @@ def create_multiple_video(query_embs, query_frames, key_embs_list, key_frames_li
         update,
         frames=np.arange(len(query_frames)),
         interval=interval,
-        blit=False)
+        blit=True)
     anim.save(video_path, dpi=80)
 
 
@@ -256,7 +256,7 @@ def create_single_video(frames, labels, video_path, interval=50, time_stride=1, 
             update,
             frames=np.arange(len(frames)),
             interval=interval,
-            blit=False)
+            blit=True)
         anim.save(video_path, dpi=80)
 
 
