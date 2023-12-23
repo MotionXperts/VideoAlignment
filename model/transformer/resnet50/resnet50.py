@@ -13,6 +13,9 @@ class ResNet50(nn.Module):
         for param in self.backbone.parameters():
             param.requires_grad = False
         self.finetune = list(model.children())[-3]
+        if self.tcc:
+            for parameter in self.finetune.parameters():
+                parameter.requires_grad = False
         self.pooling = nn.AdaptiveMaxPool2d(1)
     def forward(self,x):
         B , T , C , W ,H = x.shape

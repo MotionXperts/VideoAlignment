@@ -44,7 +44,7 @@ class KendallsTau(object):
         tau = self.get_kendalls_tau(val_embs,val_labels,val_names, cur_epoch, summary_writer, split, visualize=False)
         return tau
 
-    def get_kendalls_tau(self, embs_list,labels_list,val_names, cur_epoch, summary_writer, split, visualize=False):
+    def get_kendalls_tau(self, embs_list,labels_list,val_names, cur_epoch, summary_writer, split, visualize=True):
 
         query = np.random.randint(0,len(embs_list))
         candidate = np.random.randint(0,len(embs_list))
@@ -64,19 +64,21 @@ class KendallsTau(object):
                 self.compute_labels = 0
 
         for i in range(num_seqs):
-            # query_feats = embs_list[i][::self.stride]
+            query_feats = embs_list[i][::self.stride]
             valid_frames = np.where(labels_list[i]>=self.compute_labels)[0]
             query_feats = embs_list[i][valid_frames]
                 
             for j in range(num_seqs):
                 if i == j: continue
                 candidate_feats = embs_list[j][::self.stride]
+                candi_valid_frames = np.where(labels_list[j]>=self.compute_labels)[0]
+                candidate_feats = embs_list[j][candi_valid_frames]
                 dists = cdist(query_feats, candidate_feats, self.dist_type)
                 nns = np.argmin(dists, axis=1)
-                # if i==query and j==candidate:
+                # if i == 0 and j ==4 :
                 #     logger.info(f"comparing {val_names[i]} and {val_names[j]}")
-                #     logger.info(f"valid_frames: {valid_frames}")
-                #     logger.info(f"query_feats shape: {query_feats.shape}")
+                #     logger.info(f"query feats: {query_feats}")
+                #     logger.info(f"candidate feats: {candidate_feats}")
                 #     logger.info(f"nns: {nns}")
                 if visualize:
                     if (i==0 and j == 1) or (i < j and num_seqs == 14):
@@ -87,6 +89,7 @@ class KendallsTau(object):
                         if summary_writer is not None:
                             summary_writer.add_image(f'{split}/sim_matrix_{i}_{j}', sim_matrix.T, cur_epoch, dataformats='HW')
                 taus[idx] = kendalltau(np.arange(len(nns)), nns).correlation
+                # logger.info(f"Kendall's Tau ({self.compute_labels}): %.4f" % taus[idx])
                 idx += 1
         # Remove NaNs.
         taus = taus[~np.isnan(taus)]

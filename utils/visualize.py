@@ -16,9 +16,10 @@ import matplotlib.pyplot as plt
 from sklearn import manifold
 import logging
 import datetime
+from icecream import ic
 
 
-logging.getLogger('matplotlib.animation').setLevel(logging.CRITICAL)
+# logging.getLogger('matplotlib.animation').setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 EPSILON = 1e-7
@@ -46,6 +47,7 @@ def align(query_feats, candidate_feats, use_dtw):
         _, _, _, path = dtw(query_feats, candidate_feats, dist='sqeuclidean')
         _, uix = np.unique(path[0], return_index=True)
         nns = path[1][uix]
+        ic(path[1],uix,nns)
     else:
         dists = cdist(query_feats, candidate_feats, 'sqeuclidean')
         nns = np.argmin(dists, axis=1)
@@ -55,32 +57,24 @@ def dist_fn(x, y):
     dist = np.sum((x-y)**2)
     return dist
 
-def viz_align(query_feats, candidate_feats, use_dtw):
-    """Align videos based on dynamic time warping."""
-    if use_dtw:
-        # dtw() returns the minimum distance, the cost matrix, the accumulated cost matrix, and the wrap path.
-        # min_dist represents the similarity of two sequences.
-        min_dist, cost_matrix, acc_cost_matrix, path = dtw(query_feats, candidate_feats, dist=dist_fn)
-        _, uix = np.unique(path[0], return_index=True) # uix is the index of the unique element
-        nns = path[1][uix]
-    else:
-        nns = []
-        for i in range(len(query_feats)):
-            nn_frame_id, _ = get_nn( candidate_feats,query_feats[i])
-            nns.append(nn_frame_id) 
-    return nns
-
-def viz_tSNE(embs,frames,output_path,use_dtw=False,query=0):
+def viz_tSNE(embs,frames,output_path,use_dtw=False,query=0,labels=None,cfg=None):
     nns = []
+    distances = []
     idx = np.arange(len(embs))
+    query_valid_frames = np.where(labels[query]>=cfg.EVAL.KENDALLS_TAU_COMPUTE_LABELS)[0]
     for candidate in range(len(embs)):
         idx[candidate] = candidate
-        nns.append(viz_align(embs[query], embs[candidate], use_dtw))
+        candidates_valid_frames = np.where(labels[candidate]>=cfg.EVAL.KENDALLS_TAU_COMPUTE_LABELS)[0]
+        nn = align(embs[query][query_valid_frames], embs[candidate][candidates_valid_frames], use_dtw)
+        nns.append(nn)
+        dis = cdist(embs[query][query_valid_frames], embs[candidate][candidates_valid_frames][nn], dist_fn)
+        min_index,min_value = np.argmin(dis,axis=1),np.min(dis,axis=1)
+        distances.append((min_index,min_value))
     X = np.empty((0, 128))
     y = []
     frame_idx = []
     for i, video_emb in zip(idx, embs):
-        for j in range(len(embs[0])):
+        for j in range(len(embs[0][query_valid_frames])):
             X = np.append(X, np.array([video_emb[nns[i][j]]]), axis=0)
             y.append(int(i))
             frame_idx.append(j)
@@ -98,22 +92,6 @@ def viz_tSNE(embs,frames,output_path,use_dtw=False,query=0):
     for i in range(X_norm.shape[0]):
         plt.text(X_norm[i, 0], X_norm[i, 1], str(frame_idx[i]), color=plt.cm.Set1(y[i]), 
                 fontdict={'weight': 'bold', 'size': 9})
-        
-    ## print 1D t-SNE
-    # X_tsne = manifold.TSNE(n_components=1, init='random', random_state=5, verbose=0).fit_transform(X)
-    # x_min, x_max = X_tsne.min(0), X_tsne.max(0)
-    # X_norm = (X_tsne - x_min) / (x_max - x_min)  #Normalize
-    # X_reshape = X_norm.reshape(2,-1)
-    # print("X_norm.shape: " , X_reshape.shape)
-    # print("x: " , X_reshape[0])
-    # print("y: " , X_reshape[1])
-
-    # X_reshape = torch.from_numpy(X_reshape)
-    # X_norm = torch.from_numpy(X_norm)
-    # ## validate X reshape
-    # assert torch.equal(X_reshape.reshape(-1,1),X_norm), f"X_reshape: {X_reshape.reshape(-1,1).shape}, X_norm: {X_norm.shape}"
-      
-    
 
     plt.xticks([])
     plt.yticks([])
@@ -121,7 +99,7 @@ def viz_tSNE(embs,frames,output_path,use_dtw=False,query=0):
     plt.close('all')
 
 def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use_dtw, interval=50, time_stride=1, image_out=False,
-    tsNE_only=False):
+    tsNE_only=False,labels=None,cfg=None):
     """Create aligned videos."""
     nns = align(query_embs, key_embs, use_dtw)
     if time_stride>1:
@@ -131,7 +109,7 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
     kendalls_embs = []
     kendalls_embs.append(query_embs)
     kendalls_embs.append(key_embs)
-    viz_tSNE(kendalls_embs,None,video_path.split('.mp4')[0]+('.jpg'),use_dtw=use_dtw)
+    viz_tSNE(kendalls_embs,None,video_path.split('.mp4')[0]+('.jpg'),use_dtw=use_dtw,labels=labels,cfg=cfg)
     
 
     plt.figure(figsize=(5,1))
@@ -147,24 +125,34 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
 
     fig, ax = plt.subplots(ncols=2, figsize=(10, 10), tight_layout=True)
 
-    start_time = datetime.datetime.now()
+    ims = []
+    title = fig.suptitle("Initializing Video", fontsize=16)
+    def init():
+        """Initialize the plot for animation."""
+        for i in range(2):
+            img_display = ax[i].imshow(unnorm(query_frames[0] if i == 0 else key_frames[nns[0]]))
+            ims.append(img_display)
+            # Hide grid lines and axes ticks
+            ax[i].grid(False)
+            ax[i].set_xticks([])
+            ax[i].set_yticks([])
+        title = fig.suptitle("Initializing Video", fontsize=16)
+
+        return ims,title
+
     
     def update(i):
         """Update plot with next frame."""
         if i % 10 == 0:
+            ic(max(query_frames[i].flatten()),min(query_frames[i].flatten()))
+            ic(max(unnorm(query_frames[i]).flatten()),min(unnorm(query_frames[i]).flatten()))
+            ic(query_frames[i].shape)
             print(f'{i}/{len(query_frames)}')
-        ax[0].imshow(unnorm(query_frames[i]))
-        ax[1].imshow(unnorm(key_frames[nns[i]]))
-        # Hide grid lines
-        ax[0].grid(False)
-        ax[1].grid(False)
+        title.set_text(f'Frame {i}/{len(query_frames)}')
+        ims[0].set_data(unnorm(query_frames[i]))
+        ims[1].set_data(unnorm(key_frames[nns[i]]))
 
-        # Hide axes ticks
-        ax[0].set_xticks([])
-        ax[1].set_xticks([])
-        ax[0].set_yticks([])
-        ax[1].set_yticks([])
-        plt.tight_layout()
+        return ims,title
     
     if image_out:
         image_folder = video_path.split('.mp4')[0]
@@ -176,12 +164,13 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
         anim = FuncAnimation(
             fig,
             update,
+            init_func = init,
             frames=np.arange(len(query_frames)),
             interval=interval,
-            blit=True)
+            blit=False)
         
         anim.save(video_path, dpi=80)
-        logger.info(f"Video saved, time elapsed: {datetime.datetime.now()-start_time}")
+        # logger.info(f"Video saved, time elapsed: {datetime.datetime.now()-start_time}")
         plt.close('all')
 
 
@@ -216,7 +205,7 @@ def create_multiple_video(query_embs, query_frames, key_embs_list, key_frames_li
         update,
         frames=np.arange(len(query_frames)),
         interval=interval,
-        blit=True)
+        blit=False)
     anim.save(video_path, dpi=80)
 
 
@@ -256,7 +245,7 @@ def create_single_video(frames, labels, video_path, interval=50, time_stride=1, 
             update,
             frames=np.arange(len(frames)),
             interval=interval,
-            blit=True)
+            blit=False)
         anim.save(video_path, dpi=80)
 
 

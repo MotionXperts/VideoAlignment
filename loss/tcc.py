@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class TCC():
     def __init__(self,cfg):
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(lineno)d: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',filename=os.path.join(cfg.LOGDIR,'stdout.log'))
+        # logging.basicConfig(level=logging.INFO, format='%(asctime)s %(lineno)d: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',filename=os.path.join(cfg.LOGDIR,'stdout.log'))
         self.label_smoothing = cfg.TCC.LABEL_SMOOTHING
         self.temperature = cfg.TCC.SOFTMAX_TEMPERATURE
         self.lambda_ = cfg.TCC.VARIANCE_LAMBDA
@@ -44,8 +44,8 @@ class TCC():
 
         if DEBUG and du.is_root_proc() and summary_writer is not None:
             ## images: B , T , H , W
-            queries = images[0]
-            candidates = images[1]
+            queries = images[0].squeeze(0)[self.cfg.DATA.NUM_CONTEXTS-1::self.cfg.DATA.NUM_CONTEXTS]
+            candidates = images[1].squeeze(0)[self.cfg.DATA.NUM_CONTEXTS-1::self.cfg.DATA.NUM_CONTEXTS]
             nn = torch.argmax(sftmax,dim=-1)
 
             ## retrieve the nearest neighbor for each query image
@@ -62,9 +62,7 @@ class TCC():
             retrieved = resize(retrieved)
             find_back = resize(find_back)
             candidates = resize(candidates)
-
             render = make_grid(torch.cat([queries,retrieved,find_back,candidates],dim=0),nrow=num_steps)
-
 
             ## create heapmap for the softmax
             sftmax = (sftmax).detach().cpu().numpy().astype(np.float32)
@@ -101,8 +99,8 @@ class TCC():
         5. calculate variance by multiplying beta and (i - mean)^2
         6. calculate Lcbr
         """
-        if self.normalize_indices:
-            steps = steps / seq_lens.unsqueeze(1)
+        # if self.normalize_indices:
+        #     steps = steps / seq_lens.unsqueeze(1)
         beta = torch.softmax(logits,dim=-1)
         i = torch.sum(steps*labels,dim=-1)
         mean = torch.sum(steps*beta,dim=-1)
@@ -151,25 +149,30 @@ class TCC():
         return loss
 
 import unittest
+import yaml
+from easydict import EasyDict as edict
 
 class TestTCC(unittest.TestCase):
     def test_compute_loss(self):
+        torch.set_printoptions(sci_mode=False)
+        torch.manual_seed(0)
         # Create a sample input tensor
-        B, T, D = 2, 50, 128
+        B, T, D = 2, 5, 128
         embs = torch.randn((B, T, D))
-        steps = torch.randint(low=0, high=T, size=(B, T))
-        seq_lens = torch.randint(low=0, high=T, size=(B,))
+        seq_lens = torch.from_numpy(np.asarray([10, 12]))
+        steps = []
+        for seq_len in seq_lens:
+            steps.append(torch.sort(torch.randperm(seq_len)[:T])[0])
+        steps=  torch.concat(steps,dim=0).reshape(B,T)
+        
 
         # Create a TCC object with default configuration
-        cfg = type('', (), {})()
-        cfg.TCC = type('', (), {})()
-        cfg.TCC.LABEL_SMOOTHING = 0.1
-        cfg.TCC.SOFTMAX_TEMPERATURE = 1.0
-        cfg.TCC.VARIANCE_LAMBDA = 0.1
+        with open("/home/c1l1mo/projects/VideoAlignment/result/NACL_full_vid/config.yaml") as f:
+            cfg = edict(yaml.load(f, Loader=yaml.FullLoader))
         tcc = TCC(cfg)
 
         # Compute the loss for the sample input tensor
-        loss = tcc.compute_loss(embs, steps, seq_lens)
+        loss = tcc.compute_loss(embs, seq_lens,steps)
 
         # Check that the loss is a scalar tensor
         self.assertIsInstance(loss, torch.Tensor)

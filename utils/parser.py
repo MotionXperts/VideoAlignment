@@ -55,6 +55,14 @@ def parse_args():
                         action="store_true",
                         default=False)
     parser.add_argument("--carl",action="store_true",default=False)
+    parser.add_argument("--no_compute_metrics",action="store_true",default=False)
+    parser.add_argument("--nc",action="store_true",default=False)
+    parser.add_argument("--align_standard",action="store_true",default=False)
+
+    parser.add_argument("--query",default=None,type=int)
+    parser.add_argument("--candidate",default=None,type=int)
+    parser.add_argument("--overwrite",action="store_true",default=False)
+
 
     return parser.parse_args()
 

@@ -384,11 +384,11 @@ def create_data_augment(cfg, augment):
             ops.append(AugmentOp(saturation_jitter, **{
                 'var': cfg.AUGMENTATION.SATURATION_MAX_DELTA,
             }))
-        # if cfg.AUGMENTATION.RANDOM_CROP:
-        #     ops.append(AugmentOp(random_resized_crop, **{
-        #         'target_height': cfg.IMAGE_SIZE,
-        #         'target_width': cfg.IMAGE_SIZE
-        #     }))
+        if cfg.AUGMENTATION.RANDOM_CROP:
+            ops.append(AugmentOp(random_resized_crop, **{
+                'target_height': cfg.IMAGE_SIZE,
+                'target_width': cfg.IMAGE_SIZE
+            }))
         if cfg.AUGMENTATION.RANDOM_FLIP:
             ops.append(RandomOp(flip, 0.5))
     else:
@@ -404,7 +404,9 @@ def create_data_augment(cfg, augment):
         "mean" : [0.485, 0.456, 0.406],
         "stddev": [0.229, 0.224, 0.225]
     }))
-    return ComposeOp(ops)
+    b4_norm = ops[:-1]
+
+    return ComposeOp(ops), ComposeOp(b4_norm)
 
 def create_simple_augment():
     ops = []

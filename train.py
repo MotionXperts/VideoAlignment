@@ -12,6 +12,7 @@ import numpy as np
 from tqdm import tqdm
 from loss.tcc import TCC
 from loss.scl import SCL
+from loss.lav import LAV
 import torch.distributed as dist
 
 import utils.dist as du
@@ -26,7 +27,6 @@ from evaluation.retrieval import Retrieval
 from model import save_checkpoint,load_checkpoint,build_model
 from torch.utils.tensorboard import SummaryWriter
 import logging
-import time
 from icecream import ic
 
 ic.disable()
@@ -46,7 +46,7 @@ def setup_seed(seed):
 def get_lr(optimizer):
     return [param_group["lr"] for param_group in optimizer.param_groups]
 
-def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_writer,DEBUG=False,current_algo=None):
+def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_writer,DEBUG=False,current_algo=None,lav=None):
     assert current_algo in ["SCL","TCC"]
 
     model.train()
@@ -61,21 +61,21 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
         scaler = torch.cuda.amp.GradScaler()
         # with torch.cuda.amp.autocast():
         #     loss = algo[current_algo].ori_compute_loss(model,video,seq_len,steps,mask)
-
         batch_size, num_views, num_steps, c, h, w = video.shape
         video = video.view(-1, num_steps, c, h, w)
         embs = model(video,video_mask=mask,skeleton=skeleton)
 
         with torch.cuda.amp.autocast():
             loss = algo[current_algo].compute_loss(embs,seq_len.to(embs.device),steps.to(embs.device),mask.to(embs.device),images=original_video,summary_writer=summary_writer,epoch=cur_epoch,split="train")
-        ic(loss)
+            if lav is not None:
+                lav_loss = lav.compute_loss(embs,steps.to(embs.device),seq_len.to(embs.device))
+                loss=loss+lav_loss
         scaler.scale(loss).backward()
         scaler.unscale_(optimizer)
         torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.OPTIMIZER.GRAD_CLIP)
         scaler.step(optimizer)
         scaler.update()
         loss[torch.isnan(loss)] = 0
-        ic(loss)
         ic(du.all_reduce([loss])[0].item() / len(trainloader))
         total_loss += du.all_reduce([loss])[0].item() / len(trainloader)
 
@@ -187,8 +187,9 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
             for query,candidate in zip(queries,candidates):
                 video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{query}_{candidate}.mp4')
                 print(f"creating video {video_name}")
+                labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
                 create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
-                    video_name,use_dtw=True,tsNE_only=(split=="train" or tsNE_only))
+                    video_name,use_dtw=True,tsNE_only=(split=="train" or tsNE_only),labels=labels,cfg=cfg)
 
 def main():
     args = parse_args()
@@ -209,6 +210,8 @@ def main():
     model = model.cuda()
     model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank,find_unused_parameters=True)
+
+    
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.OPTIMIZER.LR.INITIAL_LR,
             betas=(0.9, 0.999),
@@ -235,17 +238,38 @@ def main():
     test_samplers ={}
     test_eval_loaders = {}
 
+    if hasattr(cfg.DATA,'TRAIN_NAME'):
+        train_name = cfg.DATA.TRAIN_NAME
+    else:
+        train_name = 'train'
+
+    if hasattr(cfg.DATA,'TEST_NAME'):
+        test_name = cfg.DATA.TEST_NAME
+    elif args.demo_or_inference is not None:
+        test_name = args.demo_or_inference
+    else:
+        test_name = 'processed_videos_test'
+    
+    if du.is_root_proc():
+        logger.info(f"train_name: {train_name}")
+        for name,param in model.named_parameters():
+            if param.requires_grad:
+                logger.info(f'training layer: {name}')
+
     if cfg.TRAINING_ALGO=='tcc_scl_tcc':
-        train_loaders["TCC"],train_samplers["TCC"],train_eval_loaders["TCC"] = construct_dataloader(cfg, 'untrimmed_train',"tcc")
+        train_loaders["TCC"],train_samplers["TCC"],train_eval_loaders["TCC"] = construct_dataloader(cfg, train_name,"tcc")
         test_loaders ["TCC"],_                    ,test_eval_loaders ["TCC"] = construct_dataloader(cfg, args.demo_or_inference ,"tcc")
-        train_loaders["SCL"],train_samplers["SCL"],train_eval_loaders["SCL"] = construct_dataloader(cfg, 'untrimmed_train',"scl")
+        train_loaders["SCL"],train_samplers["SCL"],train_eval_loaders["SCL"] = construct_dataloader(cfg, train_name,"scl")
         test_loaders ["SCL"],_                    ,test_eval_loaders ["SCL"] = construct_dataloader(cfg, args.demo_or_inference ,"scl")
     else:
-        train_loaders[cfg.TRAINING_ALGO.upper()],train_samplers[cfg.TRAINING_ALGO.upper()], train_eval_loaders[cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'train',cfg.TRAINING_ALGO)
-        test_loaders [cfg.TRAINING_ALGO.upper()], _                                       , test_eval_loaders [cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, 'val',cfg.TRAINING_ALGO)
+        train_loaders[cfg.TRAINING_ALGO.upper()],train_samplers[cfg.TRAINING_ALGO.upper()], train_eval_loaders[cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, train_name,cfg.TRAINING_ALGO)
+        test_loaders [cfg.TRAINING_ALGO.upper()], _                                       , test_eval_loaders [cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, test_name,cfg.TRAINING_ALGO)
 
 
     algo = {"TCC":TCC(cfg),"SCL":SCL(cfg)}
+    lav = None
+    if 'LAV' in cfg:
+        lav = LAV(cfg)
     
     KD = KendallsTau(cfg)
     RE = Retrieval(cfg)
@@ -254,7 +278,7 @@ def main():
 
     current_algo = cfg.TRAINING_ALGO.upper()
     try:
-        for epoch in range(start_epoch+1,cfg.TRAIN.MAX_EPOCHS+1):
+        for epoch in range(start_epoch+1,cfg.TRAIN.MAX_EPOCHS+2):
             if "_" in cfg.TRAINING_ALGO:
                 if epoch < cfg.TRAIN.FIRST_STAGE_EPOCHS:
                     current_algo = cfg.TRAINING_ALGO.split("_")[0].upper()
@@ -268,22 +292,23 @@ def main():
             test_eval_loader = test_eval_loaders[current_algo]
 
             train_sampler.set_epoch(epoch)
-            train(cfg,algo,model,train_loader,optimizer,scheduler,epoch,summary_writer,DEBUG=args.debug,current_algo=current_algo)
+            train(cfg,algo,model,train_loader,optimizer,scheduler,epoch,summary_writer,DEBUG=args.debug,current_algo=current_algo,lav=lav)
             if epoch % 100 == 0:
                 val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
                 if du.is_root_proc():
                     if epoch != 0:
-                        evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test",tsNE_only=True)
-            if (epoch+1) % 20 == 0 :
+                        evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test")
+            if (epoch+1) % 50 == 0 :
                 val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
                 if du.is_root_proc():
                     save_checkpoint(cfg,model,optimizer,epoch)
+                    evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test")
             du.synchronize()
     except Exception as e:
         print(traceback.format_exc())
         print(f"{e} occured, saving model before quitting.")
     finally:
-        # save_checkpoint(cfg,model,optimizer,epoch)
+        save_checkpoint(cfg,model,optimizer,epoch)
         dist.destroy_process_group()
 
 if __name__ == '__main__':

@@ -34,7 +34,8 @@ def load_checkpoint(cfg,model,optimizer,name=None):
                 checkpoint_path = natsorted(checkpoints)[-1]
             checkpoint = torch.load(os.path.join(checkpoint_dir,checkpoint_path))
             model.module.load_state_dict(checkpoint["model_state"])
-            optimizer.load_state_dict(checkpoint["optimizer_state"])
+            if optimizer is not None:
+                optimizer.load_state_dict(checkpoint["optimizer_state"])
             if du.is_root_proc():
                 print(f"LOADING CHECKPOINT AT {checkpoint_path}")
             return checkpoint["epoch"] 
@@ -50,4 +51,4 @@ def build_model(cfg):
         return CARL(cfg)
     else:
         print("BUILDING CONV")
-        return Conv(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,cfg.MODEL.EMBEDDER_MODEL.FC_DROPOUT_RATE,cfg.DATA.NUM_CONTEXTS)
+        return Conv(cfg,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,cfg.MODEL.EMBEDDER_MODEL.FC_DROPOUT_RATE,cfg.DATA.NUM_CONTEXTS)

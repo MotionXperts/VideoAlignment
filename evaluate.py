@@ -4,16 +4,18 @@ import warnings
 warnings.filterwarnings("ignore",category=UserWarning)
 warnings.filterwarnings("ignore",category=FutureWarning)
 
+import pickle
 import torch
 import random
 import numpy as np
 from loss.tcc import TCC
-from loss.carl_tcc import TCC as CARL_TCC
 import torch.distributed as dist
 
 import utils.dist as du
 from utils.parser import parse_args,load_config
 from utils.visualize import create_video
+from utils.nancy_result import *
+from utils.dump_nn_frames import FramesDumper
 
 from dataset import construct_dataloader
 from evaluation.kendalls_tau import KendallsTau
@@ -28,6 +30,8 @@ import logging
 pylogger = logging.getLogger("torch.distributed")
 pylogger.setLevel(logging.ERROR)
 
+
+
 def setup_seed(seed):
     random.seed(seed)                          
     np.random.seed(seed)                       
@@ -36,16 +40,13 @@ def setup_seed(seed):
     torch.cuda.manual_seed_all(seed)           
     torch.backends.cudnn.deterministic = True  
 
-def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",generate_video=True):
+def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",generate_video=True,no_compute_metrics=False,standard_entry = None):
     embs_list = []
     steps_list = []
     seq_lens_list = []
     frame_labels_list = []
     names_list = []
     input_lens_list = []
-
-    max_frames_per_batch = cfg.EVAL.FRAMES_PER_BATCH
-    num_contexts = cfg.DATA.NUM_CONTEXTS
 
     model.eval()
     embs_list = []
@@ -54,6 +55,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
         for index,dataset in enumerate(loader):
             for cur_iter,(original_video,video,frame_label,seq_len,chosen_steps,mask,names,skeleton) in enumerate(loader[index]):
                 video = video.squeeze(0)
+                original_video=original_video.squeeze(0)
                 embs = []
                 seq_len = seq_len.item()
                 assert video.size(0) == 1 # batch_size==1
@@ -69,6 +71,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                     steps = torch.clamp(steps.view(-1), 0, seq_len - 1)
                     # Select data based on steps
                     video = video.squeeze(0)
+                    original_video=original_video.squeeze(0)
                     input_video = video[steps.long()]
                     input_video = input_video.unsqueeze(0)
                     with torch.cuda.amp.autocast():
@@ -89,34 +92,65 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                 "video":video_list,
                 "labels":frame_labels_list,
             }
-            KD.evaluate(dataset,epoch,summary_writer,split=split)
-            RE.evaluate(dataset,epoch,summary_writer,split=split)
 
-            queries = [134]
-            candidates = [44]
+            ## append the standard emb to training and validation to generate video
+            if standard_entry is not None:
+                dataset["embs"].append(standard_entry["embs"])
+                dataset["name"].append(standard_entry["name"])
+                dataset["video"].append(standard_entry["video"])
+                dataset["labels"].append(standard_entry["labels"])
+            
+            if not no_compute_metrics:
+                KD.evaluate(dataset,epoch,summary_writer,split=split)
+                RE.evaluate(dataset,epoch,summary_writer,split=split)
 
-            for _ in range(15):
-                # queries.append(np.random.randint(0,len(names_list)))
-                queries.append(134)
-                candidates.append(np.random.randint(0,len(names_list)))
-            # queries=  [23,25,28,4,4]
-            # candidates = [8,26,14,25,16]
+            if cfg.args.query is not None and cfg.args.candidate is not None:
+                queries = [cfg.args.query]
+                candidates = [cfg.args.candidate]
+            else:
+                queries = [-1]
+                candidates = []
+                # for _ in range(10):
+                #     queries.append(np.random.randint(0,len(names_list)))
+                #     candidates.append(np.random.randint(0,len(names_list)))
+
+                for i in range(0,len(dataset["name"])):
+                    queries.append(-1)
+                    candidates.append(i)
+
 
             for query,candidate in zip(queries,candidates):
                 while candidate == query:
                     candidate = np.random.randint(0,len(names_list))
                 if generate_video and du.is_root_proc():
-                    video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
+                    if cfg.args.nc :
+                        video_name = os.path.join(cfg.LOGDIR,'NC_align',f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
+                    else:
+                        video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
                     print(f"generate video {video_name}")
-                    if not os.path.exists(video_name):
-                        create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
-                                video_name,use_dtw=("no_dtw" not in video_name),interval=200)
-                    # video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_no_dtw.mp4')
-                    # print(f"generate video {video_name}")
-                    # if not os.path.exists(video_name):
-                    #     create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
-                    #             video_name,use_dtw=("no_dtw" not in video_name),interval=200)
 
+                    if not os.path.exists(video_name) and "cam2_GX010274" not in video_name:
+                        if cfg.args.nc :
+                            align_by_start(cfg,video_name,dataset,query,candidate)
+                        else:
+                            labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
+                            create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
+                                    video_name,use_dtw=("no_dtw" not in video_name),interval=200,labels=labels,cfg=cfg)
+                    # video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])})_no_dtw.mp4')
+                    # print(f"generate video {video_name}")
+                    
+                    # if not os.path.exists(video_name) and "cam2_GX010274" not in video_name:
+                    #     labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
+                    #     create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
+                    #             video_name,use_dtw=("no_dtw" not in video_name),interval=200,labels=labels,cfg=cfg)
+
+    ## delete the appended standard as we have done producing video and we want to match the assertion in dump nn frames
+    if standard_entry is not None:
+        del dataset["embs"][-1]
+        del dataset["name"][-1]
+        del dataset["video"][-1]
+        del dataset["labels"][-1]
+    return dataset
 def main():
     args = parse_args()
     cfg = load_config(args)
@@ -132,24 +166,54 @@ def main():
     model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank,find_unused_parameters=True)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.OPTIMIZER.LR.INITIAL_LR,
-            betas=(0.9, 0.999),
-            weight_decay=cfg.OPTIMIZER.WEIGHT_DECAY,)
     summary_writer = SummaryWriter(os.path.join(cfg.LOGDIR, 'train_logs'))
 
-    trainloader,train_sampler, train_eval_loader = construct_dataloader(cfg, 'train',cfg.TRAINING_ALGO.split("_")[0])
-    testloader,_, test_eval_loader = construct_dataloader(cfg, args.demo_or_inference,cfg.TRAINING_ALGO.split("_")[0])
+    if args.demo_or_inference is not None:
+        test_name = args.demo_or_inference
+    elif "TEST_NAME" in cfg.DATA:
+        test_name = cfg.DATA.TEST_NAME
+    else:
+        raise Exception("Please specify a test name in config file or in command line.")
 
-    algo = {"TCC":TCC(cfg),"CARL_TCC":CARL_TCC(cfg)}    
+
+    testloader,_, test_eval_loader = construct_dataloader(cfg, test_name,cfg.TRAINING_ALGO.split("_")[0])
+    algo = {"TCC":TCC(cfg)}    
     KD = KendallsTau(cfg)
     RE = Retrieval(cfg)
+    start_epoch = load_checkpoint(cfg,model,None,args.ckpt)
 
-    start_epoch = load_checkpoint(cfg,model,optimizer,args.ckpt)
+    
+    print("Retreiving test dataset and standard entry ...")
+    test_dataset = evaluate(cfg,algo,model,start_epoch,test_eval_loader,summary_writer,KD,RE,split=test_name,generate_video=args.generate,no_compute_metrics=args.no_compute_metrics)
+    standard_entry = {"embs":test_dataset["embs"][-1],"name":test_dataset["name"][-1],"video":test_dataset["video"][-1],"labels":test_dataset["labels"][-1]}
 
-    # align_by_start(cfg,model,start_epoch,test_eval_loader)
-    # evaluate(cfg,algo,model,start_epoch,train_eval_loader,summary_writer,KD,split="train")
-    evaluate(cfg,algo,model,start_epoch,test_eval_loader,summary_writer,KD,RE,split=args.demo_or_inference,generate_video=args.generate)
+
+    if cfg.args.align_standard:
+        with open(os.path.join(cfg.PATH_TO_DATASET,test_name+".pkl"),'rb') as f:
+            standard_assertion = pickle.load(f)
+        assert "standard" in standard_assertion[-1]["name"]
+
+        _,_,train_eval_loader = construct_dataloader(cfg, "long_train_label",cfg.TRAINING_ALGO.split("_")[0])
+        _,_,val_eval_loader = construct_dataloader(cfg, "long_val_label",cfg.TRAINING_ALGO.split("_")[0])
+
+        print("Retreiving train dataset ...")
+        train_dataset = evaluate(cfg,algo,model,start_epoch,train_eval_loader,summary_writer,KD,RE,split="long_train_label",generate_video=args.generate,no_compute_metrics=args.no_compute_metrics,standard_entry = standard_entry)
+        print("Retreiving test dataset ...")
+        val_dataset = evaluate(cfg,algo,model,start_epoch,val_eval_loader,summary_writer,KD,RE,split="long_val_label",generate_video=args.generate,no_compute_metrics=args.no_compute_metrics,standard_entry = standard_entry)
+        
+        whole_dataset = {
+            "train":train_dataset,
+            "val":val_dataset,
+            "test":test_dataset
+        }
+
+        FD = FramesDumper(cfg,whole_dataset,standard_entry["embs"])
+        FD()
+    
     dist.destroy_process_group()
+
+
+
 
 if __name__ == '__main__':
     main()

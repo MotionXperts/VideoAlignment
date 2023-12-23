@@ -55,11 +55,11 @@ class Skating(torch.utils.data.Dataset):
         if self.cfg.SSL and self.mode=="train" :
             self.data_preprocess,self.b4_norm = create_ssl_data_augment(cfg, augment=True)
         elif self.mode=="train" and not self.simple_preprocess:
-            self.data_preprocess = create_data_augment(cfg, augment=True)
+            self.data_preprocess,self.b4_norm = create_data_augment(cfg, augment=True)
         elif self.simple_preprocess:
             self.data_preprocess = lambda x:((x * 255.0)  / 127.5) - 1.0
         else:
-            self.data_preprocess = create_data_augment(cfg, augment=False)
+            self.data_preprocess,self.b4_norm = create_data_augment(cfg, augment=False)
 
         if 'tcn' in cfg.TRAINING_ALGO:
             self.num_frames = self.num_frames // 2
@@ -78,6 +78,7 @@ class Skating(torch.utils.data.Dataset):
         else:
             video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["video_file"])
             video, _, info = read_video(video_file, pts_unit='sec')
+        
         video = video.permute(0,3,1,2).float() / 255.0 # T H W C -> T C H W, [0,1] tensor
 
         skeleton = 0
@@ -150,9 +151,18 @@ class Skating(torch.utils.data.Dataset):
         if hasattr(self.cfg.DATA, "SKELETON") and self.cfg.DATA.SKELETON:
             skeleton = skeleton[steps.long()]
         ## not flipping skeleton right now.
-        original_video = video.clone()
+        if "original_video_file" in self.dataset[index]:
+            original_video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["original_video_file"])
+            original_video, _, _ = read_video(original_video_file, pts_unit='sec')
+            original_video = original_video.permute(0,3,1,2).float() / 255.0 # T H W C -> T C H W, [0,1] tensor
+        else:
+            try:
+                original_video = self.b4_norm(video)
+            except:
+                original_video = video.clone()
         video = self.data_preprocess(video)
         video = video.unsqueeze(0)
+        original_video = original_video.unsqueeze(0)
         video_mask=video_mask.unsqueeze(0)
         label = frame_label[chosen_steps.long()]
 
@@ -206,13 +216,13 @@ class Skating(torch.utils.data.Dataset):
             context_stride = self.cfg.DATA.CONTEXT_STRIDE
             steps = steps.view(-1,1) + context_stride*torch.arange(-(self.num_contexts-1), 1).view(1,-1)
             steps = torch.clamp(steps.view(-1), 0, seq_len - 1)
-
         return steps, chosen_steps, video_mask
 
 import unittest
 from easydict import EasyDict as edict
 import random
 import yaml
+
 
 class TestSkating(unittest.TestCase):
     
@@ -286,4 +296,11 @@ class TestSkating(unittest.TestCase):
         ic(chosen_steps)
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+    with open("/home/c1l1mo/projects/VideoAlignment/result/conv_lav_no_back/config.yaml","r")as file :
+        cfg = edict(yaml.safe_load(file))
+        cfg.PATH_TO_DATASET = '/home/c1l1mo/datasets/new_boxing_carl'
+    dataset = Skating(cfg,"no_back_processed_videos")
+    for original_video,video,label,seq_len,steps,masks,name,skeleton in dataset:
+        ic(original_video.shape,video.shape,steps)
+        break

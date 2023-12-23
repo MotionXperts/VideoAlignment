@@ -2,6 +2,7 @@
 from numpy import array, zeros, full, argmin, inf, ndim
 from scipy.spatial.distance import cdist
 from math import isinf
+from icecream import ic
 
 def dtw(x, y, dist, warp=1):
     """
@@ -62,14 +63,21 @@ def _traceback(D):
 
 if __name__ == "__main__":
     import numpy as np
+    def dist_fn(x, y):
+        dist = np.sum((x-y)**2)
+        return dist
+
     x = array([2, 0, 1, 1, 2, 4, 2, 1, 2, 0]).reshape(-1, 1)
     y = array([1, 1, 2, 4, 2, 1, 2, 0]).reshape(-1, 1)
 
-    manhattan_distance = lambda x, y: np.abs(x - y)
+    # manhattan_distance = lambda x, y: np.abs(x - y)
 
-    d, cost_matrix, acc_cost_matrix, path = dtw(x, y, dist=manhattan_distance)
+    d, cost_matrix, acc_cost_matrix, path = dtw(x, y, dist=dist_fn)
 
     print(d)
     print(cost_matrix)
     print(acc_cost_matrix)
     print(path)
+    _, uix = np.unique(path[0], return_index=True)
+    print(uix)
+    print(path[1][uix])
