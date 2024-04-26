@@ -19,6 +19,7 @@ import utils.dist as du
 from utils.config import get_cfg
 from utils.parser import parse_args,load_config
 from utils.visualize import create_video
+from utils.dtw import dtw
 
 from dataset import construct_dataloader
 from evaluation.kendalls_tau import KendallsTau
@@ -46,7 +47,7 @@ def setup_seed(seed):
 def get_lr(optimizer):
     return [param_group["lr"] for param_group in optimizer.param_groups]
 
-def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_writer,DEBUG=False,current_algo=None,lav=None):
+def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_writer,DEBUG=False,current_algo=None,lav=None,KD=None):
     assert current_algo in ["SCL","TCC"]
 
     model.train()
@@ -57,6 +58,7 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
     if du.is_root_proc():
         trainloader = tqdm(trainloader,total=len(trainloader))
     for cur_iter,(original_video,video,label,seq_len,steps,mask,name,skeleton) in enumerate(trainloader):
+
         optimizer.zero_grad()
         scaler = torch.cuda.amp.GradScaler()
         # with torch.cuda.amp.autocast():
@@ -65,12 +67,17 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
         video = video.view(-1, num_steps, c, h, w)
         embs = model(video,video_mask=mask,skeleton=skeleton)
 
+
+
         with torch.cuda.amp.autocast():
             loss = algo[current_algo].compute_loss(embs,seq_len.to(embs.device),steps.to(embs.device),mask.to(embs.device),images=original_video,summary_writer=summary_writer,epoch=cur_epoch,split="train")
             if lav is not None:
                 lav_loss = lav.compute_loss(embs,steps.to(embs.device),seq_len.to(embs.device))
                 loss=loss+lav_loss
         scaler.scale(loss).backward()
+
+
+
         scaler.unscale_(optimizer)
         torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.OPTIMIZER.GRAD_CLIP)
         scaler.step(optimizer)
@@ -81,14 +88,36 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
 
 
     if du.is_root_proc():
+        if DEBUG:
+            ## original video
+            summary_writer.add_video(f'train/ori_video', video, cur_epoch, fps=1)
+            ## add cost matrix as image
+            _, _, _, path = dtw(embs[0].detach().cpu(), embs[1].detach().cpu(), dist='sqeuclidean')
+            _, uix = np.unique(path[0], return_index=True)
+            nns = path[1][uix]
+            
+            ## aligned video
+            print("shape of video[0]: ", video[0].shape)
+            print("shape of video[1]: ", video[1].shape)
+            print("uix: " , uix)
+            print("nns: ", nns)
+            aligned_video = torch.stack([video[0][uix], video[1][nns]])
+            print("shape of aligned video: ", aligned_video.shape)
+            summary_writer.add_video(f'train/aligned_video', aligned_video, cur_epoch, fps=1)
+
+
+        
         logger.info(f"epoch: {cur_epoch},total_loss:  {total_loss}")
+        ## add 2(batch size) per-frame videos to tensorboard
         summary_writer.add_scalar('train/loss', total_loss, cur_epoch)
         summary_writer.add_scalar('train/learning_rate', get_lr(optimizer)[0], cur_epoch)
+        
         try:
             wandb.log({f"train/loss": total_loss,"custom_step": cur_epoch})
             wandb.log({"learning_rate": get_lr(optimizer)[0],"custom_step": cur_epoch})
         except:
             pass
+    
 
     if cur_epoch != cfg.TRAIN.MAX_EPOCHS-1:
         scheduler.step()
@@ -175,8 +204,8 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
             RE.evaluate(dataset,epoch,summary_writer,split=split)
         
             ## check one same q/c pair and check an arbitrary q/c pair
-            queries = [4]
-            candidates = [5]
+            queries = [0]
+            candidates = [1]
             query = np.random.randint(0,len(embs_list))
             candidate = np.random.randint(0,len(embs_list))
             while query == candidate:
@@ -209,7 +238,7 @@ def main():
     torch.cuda.set_device(args.local_rank)
     model = model.cuda()
     model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank,find_unused_parameters=True)
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank,find_unused_parameters=False)
 
     
 
@@ -292,12 +321,12 @@ def main():
             test_eval_loader = test_eval_loaders[current_algo]
 
             train_sampler.set_epoch(epoch)
-            train(cfg,algo,model,train_loader,optimizer,scheduler,epoch,summary_writer,DEBUG=args.debug,current_algo=current_algo,lav=lav)
-            if epoch % 100 == 0:
-                val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
-                if du.is_root_proc():
-                    if epoch != 0:
-                        evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test")
+            train(cfg,algo,model,train_loader,optimizer,scheduler,epoch,summary_writer,DEBUG=args.debug,current_algo=current_algo,lav=lav,KD=KD)
+            # if epoch % 100 == 0:
+            #     val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
+            #     if du.is_root_proc():
+            #         if epoch != 0:
+            #             evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test")
             if (epoch+1) % 50 == 0 :
                 val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
                 if du.is_root_proc():

@@ -16,6 +16,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="TCC training pipeline.")
     parser.add_argument('--local_rank', default=0, type=int, help='rank in local processes')
 
+    parser.add_argument('--path_to_dataset', type=str, default=None, help='overwrite the default path to dataset.')
+
+    ## should be set to 0 when debugging with vscode according to https://blog.csdn.net/qianbin3200896/article/details/108182504
+    parser.add_argument('--num_workers',type=int,default=None,help='overwrite th Number of workers for dataloader, used when debugging.')
     parser.add_argument('--workdir', type=str, default=f'/home/{USER}/datasets', help='Path to datasets and pretrained models.')
     parser.add_argument('--logdir', type=str, default=None, help='Path to logs.')
     parser.add_argument('--visualize', action='store_true',
@@ -61,6 +65,7 @@ def parse_args():
 
     parser.add_argument("--query",default=None,type=int)
     parser.add_argument("--candidate",default=None,type=int)
+    parser.add_argument("--random",default=0,type=int)
     parser.add_argument("--overwrite",action="store_true",default=False)
 
 
@@ -103,6 +108,11 @@ def load_config(args):
     #     config = dict([(k, to_dict(v)) for k, v in cfg.items()])
     #     yaml.safe_dump(config, f,default_flow_style=False)
     os.makedirs(cfg.VISUALIZATION_DIR,exist_ok=True)
+
+    if args.path_to_dataset is not None:
+        cfg.PATH_TO_DATASET = args.path_to_dataset
+    if args.num_workers is not None:
+        cfg.DATA.NUM_WORKERS = args.num_workers
 
     return cfg
 

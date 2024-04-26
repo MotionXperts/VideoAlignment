@@ -4,7 +4,7 @@ from dataset.penn_action import PennAction,ActionBatchSampler
 import torch
 from icecream import ic
 
-def construct_dataloader(cfg,split,algo=None):
+def construct_dataloader(cfg,split,algo=None,force_test=False):
     
     if algo =="tcc":
         batch_size = cfg.TRAIN.TCC_BATCH_SIZE
@@ -36,11 +36,11 @@ def construct_dataloader(cfg,split,algo=None):
             eval_dataloader.append(torch.utils.data.DataLoader(eval_dataset,batch_size=1,shuffle=False,
                                  num_workers=cfg.DATA.NUM_WORKERS,sampler=None,pin_memory=True,drop_last=True))
     else:
-        dataset = Skating(cfg,split,algo=algo)
+        dataset = Skating(cfg,split,algo=algo,force_test=force_test)
         train_sampler = torch.utils.data.distributed.DistributedSampler(dataset,shuffle=True)
         dataloader = torch.utils.data.DataLoader(dataset,batch_size=batch_size,shuffle=False,
                             num_workers=cfg.DATA.NUM_WORKERS,sampler=train_sampler,pin_memory=True,drop_last=True)
-        eval_dataset = Skating(cfg,split,sample_all=True)
+        eval_dataset = Skating(cfg,split,sample_all=True,force_test=force_test)
         eval_dataloader = [torch.utils.data.DataLoader(eval_dataset,batch_size=1,shuffle=False,
                             num_workers=cfg.DATA.NUM_WORKERS,sampler=None,pin_memory=True,drop_last=True)]
     return dataloader,train_sampler, eval_dataloader

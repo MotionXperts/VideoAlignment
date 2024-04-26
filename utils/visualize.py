@@ -17,9 +17,10 @@ from sklearn import manifold
 import logging
 import datetime
 from icecream import ic
+from functools import partial
 
 
-# logging.getLogger('matplotlib.animation').setLevel(logging.CRITICAL)
+logging.getLogger('matplotlib.animation').setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 EPSILON = 1e-7
@@ -132,23 +133,24 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
         for i in range(2):
             img_display = ax[i].imshow(unnorm(query_frames[0] if i == 0 else key_frames[nns[0]]))
             ims.append(img_display)
+            if labels is not None:
+                ax[i].set_title(f"Label: {labels[i][0]}")
+
             # Hide grid lines and axes ticks
             ax[i].grid(False)
             ax[i].set_xticks([])
             ax[i].set_yticks([])
         title = fig.suptitle("Initializing Video", fontsize=16)
-
+        
         return ims,title
 
     
     def update(i):
         """Update plot with next frame."""
-        if i % 10 == 0:
-            ic(max(query_frames[i].flatten()),min(query_frames[i].flatten()))
-            ic(max(unnorm(query_frames[i]).flatten()),min(unnorm(query_frames[i]).flatten()))
-            ic(query_frames[i].shape)
-            print(f'{i}/{len(query_frames)}')
         title.set_text(f'Frame {i}/{len(query_frames)}')
+
+        ax[0].set_title(f"Label: {labels[0][i]}")
+        ax[1].set_title(f"Label: {labels[1][nns[i]]}")
         ims[0].set_data(unnorm(query_frames[i]))
         ims[1].set_data(unnorm(key_frames[nns[i]]))
 
@@ -165,7 +167,7 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
             fig,
             update,
             init_func = init,
-            frames=np.arange(len(query_frames)),
+            frames=(len(query_frames)),
             interval=interval,
             blit=False)
         

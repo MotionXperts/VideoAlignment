@@ -30,7 +30,7 @@ import logging
 pylogger = logging.getLogger("torch.distributed")
 pylogger.setLevel(logging.ERROR)
 
-
+ic.disable()
 
 def setup_seed(seed):
     random.seed(seed)                          
@@ -104,45 +104,42 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                 KD.evaluate(dataset,epoch,summary_writer,split=split)
                 RE.evaluate(dataset,epoch,summary_writer,split=split)
 
-            if cfg.args.query is not None and cfg.args.candidate is not None:
-                queries = [cfg.args.query]
-                candidates = [cfg.args.candidate]
-            else:
-                queries = [-1]
-                candidates = []
-                # for _ in range(10):
-                #     queries.append(np.random.randint(0,len(names_list)))
-                #     candidates.append(np.random.randint(0,len(names_list)))
+            
 
-                for i in range(0,len(dataset["name"])):
-                    queries.append(-1)
-                    candidates.append(i)
-
-
-            for query,candidate in zip(queries,candidates):
-                while candidate == query:
-                    candidate = np.random.randint(0,len(names_list))
-                if generate_video and du.is_root_proc():
-                    if cfg.args.nc :
-                        video_name = os.path.join(cfg.LOGDIR,'NC_align',f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
-                    else:
-                        video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
-                    print(f"generate video {video_name}")
-
-                    if not os.path.exists(video_name) and "cam2_GX010274" not in video_name:
+            if generate_video:
+                if cfg.args.query is not None and cfg.args.candidate is not None:
+                    queries = [cfg.args.query]
+                    candidates = [cfg.args.candidate]
+                elif cfg.args.random>0:
+                    queries = []
+                    candidates = []
+                    for i in range(cfg.args.random):
+                        queries.append(np.random.randint(0,len(names_list)))
+                        candidates.append(np.random.randint(0,len(names_list)))
+                else:
+                    queries = [-1]
+                    candidates = []
+                    for i in range(0,len(dataset["name"])):
+                        queries.append(-1)
+                        candidates.append(i)
+                
+                for query,candidate in zip(queries,candidates):
+                    while candidate == query:
+                        candidate = np.random.randint(0,len(names_list))
+                    if  du.is_root_proc():
                         if cfg.args.nc :
-                            align_by_start(cfg,video_name,dataset,query,candidate)
+                            video_name = os.path.join(cfg.LOGDIR,'NC_align',f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
                         else:
-                            labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
-                            create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
-                                    video_name,use_dtw=("no_dtw" not in video_name),interval=200,labels=labels,cfg=cfg)
-                    # video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])})_no_dtw.mp4')
-                    # print(f"generate video {video_name}")
-                    
-                    # if not os.path.exists(video_name) and "cam2_GX010274" not in video_name:
-                    #     labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
-                    #     create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
-                    #             video_name,use_dtw=("no_dtw" not in video_name),interval=200,labels=labels,cfg=cfg)
+                            video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
+                        print(f"generating video {video_name}")
+
+                        if not os.path.exists(video_name) and "cam2_GX010274" not in video_name:
+                            if cfg.args.nc :
+                                align_by_start(cfg,video_name,dataset,query,candidate)
+                            else:
+                                labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
+                                create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
+                                        video_name,use_dtw=("no_dtw" not in video_name),interval=200,labels=labels,cfg=cfg)
 
     ## delete the appended standard as we have done producing video and we want to match the assertion in dump nn frames
     if standard_entry is not None:
@@ -176,7 +173,7 @@ def main():
         raise Exception("Please specify a test name in config file or in command line.")
 
 
-    testloader,_, test_eval_loader = construct_dataloader(cfg, test_name,cfg.TRAINING_ALGO.split("_")[0])
+    testloader,_, test_eval_loader = construct_dataloader(cfg, test_name,cfg.TRAINING_ALGO.split("_")[0],force_test=True)
     algo = {"TCC":TCC(cfg)}    
     KD = KendallsTau(cfg)
     RE = Retrieval(cfg)

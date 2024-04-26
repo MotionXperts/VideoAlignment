@@ -46,10 +46,10 @@ class KendallsTau(object):
 
     def get_kendalls_tau(self, embs_list,labels_list,val_names, cur_epoch, summary_writer, split, visualize=True):
 
-        query = np.random.randint(0,len(embs_list))
-        candidate = np.random.randint(0,len(embs_list))
+        query = np.random.randint(0,len(embs_list)+1)
+        candidate = np.random.randint(0,len(embs_list)+1)
         while query == candidate:
-            candidate = np.random.randint(0,len(embs_list))
+            candidate = np.random.randint(0,len(embs_list)+1)
 
         """Get nearest neighbours in embedding space and calculate Kendall's Tau."""
         num_seqs = len(embs_list)
@@ -63,14 +63,17 @@ class KendallsTau(object):
             except:
                 self.compute_labels = 0
 
+        tau_matrix = np.zeros((num_seqs,num_seqs))
+        valid_frame_matrix = np.zeros((num_seqs,num_seqs))
         for i in range(num_seqs):
-            query_feats = embs_list[i][::self.stride]
+            # query_feats = embs_list[i][::self.stride]
             valid_frames = np.where(labels_list[i]>=self.compute_labels)[0]
             query_feats = embs_list[i][valid_frames]
                 
             for j in range(num_seqs):
-                if i == j: continue
-                candidate_feats = embs_list[j][::self.stride]
+                if i == j: 
+                    continue
+                # candidate_feats = embs_list[j][::self.stride]
                 candi_valid_frames = np.where(labels_list[j]>=self.compute_labels)[0]
                 candidate_feats = embs_list[j][candi_valid_frames]
                 dists = cdist(query_feats, candidate_feats, self.dist_type)
@@ -89,10 +92,34 @@ class KendallsTau(object):
                         if summary_writer is not None:
                             summary_writer.add_image(f'{split}/sim_matrix_{i}_{j}', sim_matrix.T, cur_epoch, dataformats='HW')
                 taus[idx] = kendalltau(np.arange(len(nns)), nns).correlation
+                tau_matrix[i,j] = taus[idx]
+                valid_frame_matrix[i,j] = len(valid_frames) - len(candi_valid_frames)
                 # logger.info(f"Kendall's Tau ({self.compute_labels}): %.4f" % taus[idx])
                 idx += 1
         # Remove NaNs.
         taus = taus[~np.isnan(taus)]
+        
+        ## draw the tau matrix to tau.png in the result file
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        cax = ax.matshow(tau_matrix, cmap='coolwarm')
+        fig.colorbar(cax)
+        if len(val_names) < 10:
+            for (i, j), z in np.ndenumerate(tau_matrix):
+                ax.text(j, i, '{:0.1f}'.format(z), ha='center', va='center')
+            ax.set_xticks(np.arange(num_seqs))
+            ax.set_yticks(np.arange(num_seqs))
+            ax.set_xticklabels(val_names)
+            ax.set_yticklabels(val_names)        
+            plt.setp(ax.get_xticklabels(), rotation=90, ha="center", rotation_mode="anchor",size=6)
+            plt.setp(ax.get_yticklabels(), rotation=0, ha="right", rotation_mode="anchor",size=6)
+        ax.set_xticks(np.arange(num_seqs,step=10))
+        ax.set_yticks(np.arange(num_seqs, step=10))
+        plt.setp(ax.get_xticklabels(), rotation=90, ha="center", rotation_mode="anchor",size=6)
+        plt.setp(ax.get_yticklabels(), rotation=0, ha="right", rotation_mode="anchor",size=6)
+        plt.savefig(f"{self.cfg.LOGDIR}/{split}_tau_{cur_epoch}.png")
+        plt.close()
+
         tau = np.mean(taus)
 
         logger.info(f"[{split}] Kendall's Tau ({self.compute_labels}): %.4f" % tau)

@@ -74,10 +74,10 @@ if __name__ == "__main__":
 
     d, cost_matrix, acc_cost_matrix, path = dtw(x, y, dist=dist_fn)
 
-    print(d)
-    print(cost_matrix)
-    print(acc_cost_matrix)
-    print(path)
+    ic(d)
+    ic(cost_matrix)
+    ic(acc_cost_matrix)
+    ic(path)
     _, uix = np.unique(path[0], return_index=True)
-    print(uix)
-    print(path[1][uix])
+    ic(uix)
+    ic(path[1][uix])

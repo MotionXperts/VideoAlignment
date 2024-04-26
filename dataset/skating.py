@@ -17,7 +17,7 @@ from dataset.data_augment import create_data_augment,create_ssl_data_augment,cre
 logger = logging.getLogger(__name__)
 
 class Skating(torch.utils.data.Dataset):
-    def __init__(self,cfg,split,sample_all=False,algo=None,train=None):
+    def __init__(self,cfg,split,sample_all=False,algo=None,train=None,force_test=False):
         # cfg.PATH_TO_DATASET = '/home/c1l1mo/datasets/new_boxing_no_overlapped'
 
         self.cfg = cfg
@@ -31,12 +31,21 @@ class Skating(torch.utils.data.Dataset):
 
         self.train = train
 
+        self.force_test = force_test
+
         self.simple_preprocess = False
         if hasattr(self.cfg.DATA, "SIMPLE_PREPROCESS") and self.cfg.DATA.SIMPLE_PREPROCESS:
             self.simple_preprocess = True
 
         with open(os.path.join(cfg.PATH_TO_DATASET, self.mode + '.pkl'), 'rb') as f:
             self.dataset = pickle.load(f)
+        
+        ### DANGEROUS!! REMOVE IT AFTER TRYING
+        if self.mode == "processed_videos_demo" :
+            for index in range(len(self.dataset)):
+                if "standard" in self.dataset[index]["name"]:
+                    print(f"found standard {index}")
+                    del self.dataset[index]
         
         if not self.sample_all:
             # logger.info(f"{len(self.dataset)} {self.split} samples of Pouring dataset have been read.")
@@ -52,7 +61,7 @@ class Skating(torch.utils.data.Dataset):
 
         self.num_frames = cfg.TRAIN.NUM_FRAMES
         # Perform data-augmentation
-        if self.cfg.SSL and self.mode=="train" :
+        if self.cfg.SSL and "train" in self.mode and not self.force_test:
             self.data_preprocess,self.b4_norm = create_ssl_data_augment(cfg, augment=True)
         elif self.mode=="train" and not self.simple_preprocess:
             self.data_preprocess,self.b4_norm = create_data_augment(cfg, augment=True)
@@ -95,10 +104,6 @@ class Skating(torch.utils.data.Dataset):
 
                 tmp_skeleton = skeleton.copy()
 
-                # if "0000.jpg" not in skeleton:
-                #     tmp_skeleton["0000.jpg"] = skeleton["0001.jpg"]
-                #     previous_image_id = 0 
-
                 for image_id in (skeleton):
                     int_image_id = int(image_id.split(".jpg")[0])
                     if previous_image_id +1 !=int_image_id:
@@ -122,7 +127,7 @@ class Skating(torch.utils.data.Dataset):
             assert len(video) == seq_len
             assert len(video) == len(frame_label)
 
-        if self.cfg.SSL and not self.sample_all and self.algo=="scl":
+        if self.cfg.SSL and not self.sample_all and self.algo=="scl" :
             names = [name, name]
             steps_0, chosen_step_0, video_mask0 = self.sample_frames(seq_len, self.num_frames)
             view_0 = self.data_preprocess(video[steps_0.long()])
@@ -183,7 +188,6 @@ class Skating(torch.utils.data.Dataset):
             if seq_len >= num_frames:
                 steps = torch.randperm(seq_len) # Returns a random permutation of integers from 0 to n - 1.
                 steps = torch.sort(steps[:num_frames])[0]
-                # steps = torch.tensor([0,1,3,5,6,7,8,9,13,14,15,16,17,19,20,21,22,23,25,26])
             else:
                 steps = torch.arange(0, num_frames)
         elif sampling_strategy == 'time_augment':
@@ -297,10 +301,10 @@ class TestSkating(unittest.TestCase):
 
 if __name__ == '__main__':
     # unittest.main()
-    with open("/home/c1l1mo/projects/VideoAlignment/result/conv_lav_no_back/config.yaml","r")as file :
+    with open("/home/c1l1mo/projects/VideoAlignment/result/NACL/config.yaml","r")as file :
         cfg = edict(yaml.safe_load(file))
         cfg.PATH_TO_DATASET = '/home/c1l1mo/datasets/new_boxing_carl'
-    dataset = Skating(cfg,"no_back_processed_videos")
+    dataset = Skating(cfg,"test")
     for original_video,video,label,seq_len,steps,masks,name,skeleton in dataset:
         ic(original_video.shape,video.shape,steps)
         break

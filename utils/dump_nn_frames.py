@@ -3,6 +3,7 @@ import torch
 import numpy as np
 import pickle
 import os
+import json
 from icecream import ic
 
 class FramesDumper():
@@ -19,10 +20,13 @@ class FramesDumper():
         self.input_test = self.load_pickle(self.input_test_pickle)
         self.original_test_length = len(self.input_test)
 
-        self.output_train_pickle = os.path.join(self.cfg.LOGDIR,'output_train.pkl')
-        self.output_val_pickle = os.path.join(self.cfg.LOGDIR,'output_val.pkl')
-        self.output_test_pickle = os.path.join(self.cfg.LOGDIR,'output_test.pkl')
-        self.standard_output_pickle = os.path.join(self.cfg.LOGDIR,'standard.pkl')
+        self.output_train_pickle = os.path.join(self.cfg.LOGDIR,'output_train_label.pkl')
+        self.output_val_pickle = os.path.join(self.cfg.LOGDIR,'output_val_label.pkl')
+        self.output_test_pickle = os.path.join(self.cfg.LOGDIR,'output_test_label.pkl')
+        self.standard_output_pickle = os.path.join(self.cfg.LOGDIR,'standard_label.pkl')
+
+        self.split_path = os.path.join(self.cfg.LOGDIR,'splits.json')
+        self.split = {'train':[],'val':[],'test':[]}
 
     def load_pickle(self,path):
         with open(path,'rb') as f:
@@ -59,7 +63,9 @@ class FramesDumper():
             assert len(dataset["name"]) == len(split),ic(len(dataset["name"]),len(split))
             for index,entry in enumerate(split):
                 embs = dataset["embs"][index]
-                labels = dataset["locate_module_label"][index]
+                if "locate_module_label" not in entry:
+                    entry["locate_module_label"] = torch.zeros_like(entry["frame_label"])
+                labels = entry["locate_module_label"]
                 assert len(labels) == len(entry["frame_label"])
                 assert len(embs) == len(entry["frame_label"])
                 start_frame = self.find_min_distance_with_standard(embs)
@@ -72,6 +78,8 @@ class FramesDumper():
                 aligned_embs = embs[start_frame:end_frame]
                 assert aligned_embs.shape == self.standard_emb.shape,ic(embs.shape,self.standard_emb.shape)
                 entry["embeddings"] = aligned_embs
+
+                self.split[split_name].append(entry["name"])
 
             if self.cfg.args.overwrite:
                 if split_name == "test":
@@ -86,4 +94,7 @@ class FramesDumper():
                 with open(output_pickle,'wb') as f:
                     pickle.dump(split,f)
                 print(f"Dumped {split_name} to {output_pickle}")
+
+        with open(self.split_path,'w') as f:
+            json.dump(self.split,f)
                 
