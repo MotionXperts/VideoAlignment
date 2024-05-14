@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 from dataset.data_augment import create_data_augment, create_ssl_data_augment
 import utils.dist as du
+import sys
+from copy import deepcopy
 
 PENN_ACTION_LIST = [
     'baseball_pitch',
@@ -59,18 +61,18 @@ class PennAction(torch.utils.data.Dataset):
         if not self.sample_all:
             seq_lens = [data['seq_len'] for data in self.dataset]
             hist, bins = np.histogram(seq_lens, bins='auto')
-            if du.is_root_proc():
-                print(list(bins.astype(np.int)))
-                print(list(hist))
+            # if du.is_root_proc():
+            #     print(list(bins.astype(np.int)))
+            #     print(list(hist))
 
         self.num_frames = cfg.TRAIN.NUM_FRAMES
         # Perform data-augmentation
         if self.cfg.SSL and self.mode=="train" and self.algo =="scl":
             self.data_preprocess,_ = create_ssl_data_augment(cfg, augment=True)
         elif self.mode=="train":
-            self.data_preprocess = create_data_augment(cfg, augment=True)
+            self.data_preprocess,_ = create_data_augment(cfg, augment=True)
         else:
-            self.data_preprocess = create_data_augment(cfg, augment=False)
+            self.data_preprocess,_ = create_data_augment(cfg, augment=False)
 
         if 'tcn' in cfg.TRAINING_ALGO:
             self.num_frames = self.num_frames // 2
@@ -90,11 +92,18 @@ class PennAction(torch.utils.data.Dataset):
         video = video.permute(0,3,1,2).float() / 255.0 # T H W C -> T C H W, [0,1] tensor
 
         if self.cfg.SSL and not self.sample_all:
+            
             names = [name, name]
             steps_0, chosen_step_0, video_mask0 = self.sample_frames(seq_len, self.num_frames)
+            steps_1, chosen_step_1, video_mask1 = self.sample_frames(seq_len, self.num_frames, pre_steps=steps_0)
+            
+            original_vid1 = deepcopy(video[steps_0.long()])
+            original_vid2 = deepcopy(video[steps_1.long()])
+            original_videos = torch.stack([original_vid1, original_vid2], dim=0)
+
+            
             view_0 = self.data_preprocess(video[steps_0.long()])
             label_0 = frame_label[chosen_step_0.long()]
-            steps_1, chosen_step_1, video_mask1 = self.sample_frames(seq_len, self.num_frames, pre_steps=steps_0)
             view_1 = self.data_preprocess(video[steps_1.long()])
             label_1 = frame_label[chosen_step_1.long()]
             videos = torch.stack([view_0, view_1], dim=0)
@@ -103,7 +112,9 @@ class PennAction(torch.utils.data.Dataset):
             chosen_steps = torch.stack([chosen_step_0, chosen_step_1], dim=0)
             video_mask = torch.stack([video_mask0, video_mask1], dim=0)
             skeleton = 0
-            return videos, videos, labels, seq_lens, chosen_steps, video_mask, names,skeleton
+
+            original_videos = torch.stack([video[steps_0.long()], video[steps_1.long()]])
+            return original_videos, videos, labels, seq_lens, chosen_steps, video_mask, names,skeleton
 
         elif not self.sample_all:
             steps, chosen_steps, video_mask = self.sample_frames(seq_len, self.num_frames)

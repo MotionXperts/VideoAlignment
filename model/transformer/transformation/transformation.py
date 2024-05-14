@@ -32,7 +32,7 @@ class Transformation(nn.Module):
         x = x.reshape(B,T,-1)
         return x
     
-        # return x_fc,x_emb,x
+        return x_fc,x_emb,x
 
 import unittest
 

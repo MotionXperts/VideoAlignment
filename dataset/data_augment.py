@@ -393,11 +393,11 @@ def create_data_augment(cfg, augment):
         if cfg.AUGMENTATION.RANDOM_FLIP:
             ops.append(RandomOp(flip, 0.5))
     else:
-        # if cfg.AUGMENTATION.RANDOM_CROP:
-        #     ops.append(AugmentOp(uniform_crop, **{
-        #         'size': cfg.IMAGE_SIZE
-        #     }))
-        pass
+        if cfg.AUGMENTATION.RANDOM_CROP:
+            ops.append(AugmentOp(uniform_crop, **{
+                'size': cfg.IMAGE_SIZE
+            }))
+        # pass
     ops.append(AugmentOp(resize, **{
         'size': cfg.IMAGE_SIZE
     }))

@@ -30,7 +30,6 @@ class PositionalEncoding(nn.Module):
         B , T,embed_size = x.shape 
         pos_enc_matrix = self.encode(T,embed_size) 
         x = x + pos_enc_matrix.type_as(x)
-
         x = self.dropout(x)
         return x
 

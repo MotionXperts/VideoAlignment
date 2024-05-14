@@ -5,7 +5,7 @@ from .transformer.transformer import CARL
 from .conv.conv import Conv
 from .carl_transformer.transformer import TransformerModel as CARL_Transformer
 from icecream import ic
-import utils.dist as du
+from utils import dist as du
 
 def save_checkpoint(cfg, model, optimizer, epoch):
     path = os.path.join(cfg.LOGDIR, "checkpoints")
@@ -24,7 +24,7 @@ def save_checkpoint(cfg, model, optimizer, epoch):
 
 def load_checkpoint(cfg,model,optimizer,name=None):
     checkpoint_dir = os.path.join(cfg.LOGDIR, "checkpoints")
-    if os.path.exists(checkpoint_dir):
+    if os.path.exists(checkpoint_dir) and cfg.args.ckpt != "no":
         checkpoints = os.listdir(checkpoint_dir)
         if len(checkpoints) > 0:
             ## sort the files in checkpoint dir

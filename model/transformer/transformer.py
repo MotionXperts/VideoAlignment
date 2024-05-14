@@ -43,7 +43,7 @@ class CARL(nn.Module):
                 for name,parameter in self.projection.named_parameters():
                     parameter.data.fill_(.1)
 
-    def forward(self,x,video_mask=None,skeleton=None,split="train"):
+    def forward(self,x,video_masks=None,skeleton=None,split="train"):
         B , T , C , W ,H = x.shape
         x = self.resnet50(x)
 
@@ -53,7 +53,7 @@ class CARL(nn.Module):
             x = torch.cat([x,skeleton],dim=-1)
         
         x = self.transformation(x,B,T)
-        x = self.encoder(x,video_mask)
+        x = self.encoder(x,video_masks)
         if self.cfg.MODEL.PROJECTION and split == "train":
             x = x.view(-1,128)
             x = self.projection(x)
@@ -63,17 +63,17 @@ class CARL(nn.Module):
             x = F.normalize(x, dim=-1)
         return x
     
-        x_res,x_reshape,x_pooling,x_flatten,x = self.resnet50(x)
-        x_fc,x_emb,x = self.transformation(x,B,T)
-        x_transform = x
-        x_pos,x_encoding_layer,x = self.encoder(x,video_mask)
-        return {"x_res":x_res,
-                "x_reshape":x_reshape,
-                "x_pooling":x_pooling,
-                "x_flatten":x_flatten,
-                "x_fc":x_fc,
-                "x_emb":x_emb,
-                "x_transform":x_transform,
-                "x_pos":x_pos,
-                "x_encoding_layer":x_encoding_layer,
-                "x":x}
+        # x_res,x_reshape,x_pooling,x_flatten,x = self.resnet50(x)
+        # x_fc,x_emb,x = self.transformation(x,B,T)
+        # x_transform = x
+        # x_pos,x_encoding_layer,x = self.encoder(x,video_mask)
+        # return {"x_res":x_res,
+        #         "x_reshape":x_reshape,
+        #         "x_pooling":x_pooling,
+        #         "x_flatten":x_flatten,
+        #         "x_fc":x_fc,
+        #         "x_emb":x_emb,
+        #         "x_transform":x_transform,
+        #         "x_pos":x_pos,
+        #         "x_encoding_layer":x_encoding_layer,
+        #         "x":x}

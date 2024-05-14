@@ -62,7 +62,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                 if cfg.MODEL.EMBEDDER_TYPE != 'conv':
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
                     with torch.cuda.amp.autocast():
-                        emb_feats = model(video,video_mask=None,skeleton=skeleton)
+                        emb_feats = model(video,video_masks=None,skeleton=skeleton)
                 else:
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
                     steps = torch.arange(0, seq_len, cfg.DATA.SAMPLE_ALL_STRIDE)
@@ -75,7 +75,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                     input_video = video[steps.long()]
                     input_video = input_video.unsqueeze(0)
                     with torch.cuda.amp.autocast():
-                        emb_feats = model(input_video,video_mask=None)
+                        emb_feats = model(input_video,video_masks=None)
                 embs.append(emb_feats[0].cpu())
                 valid = (frame_label[0]>=0)
                 embs = torch.cat(embs, dim=0)
@@ -100,6 +100,8 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                 dataset["video"].append(standard_entry["video"])
                 dataset["labels"].append(standard_entry["labels"])
             
+            if len(cfg.DATASETS) > 1:
+                dataset["subset_name"] = cfg.DATASETS[index]
             if not no_compute_metrics:
                 KD.evaluate(dataset,epoch,summary_writer,split=split)
                 RE.evaluate(dataset,epoch,summary_writer,split=split)

@@ -13,6 +13,22 @@ def softmax(w, t=1.0):
     e = np.exp(np.array(w) / t)
     return e / np.sum(e)
 
+PENN_ACTION_LIST = [
+    'baseball_pitch',
+    'baseball_swing',
+    'bench_press',
+    'bowl',
+    'clean_and_jerk',
+    'golf_swing',
+    'jumping_jacks',
+    'pushup',
+    'pullup',
+    'situp',
+    'squat',
+    'tennis_forehand',
+    'tennis_serve'
+]
+
 class KendallsTau(object):
     """Calculate Kendall's Tau."""
 
@@ -28,7 +44,7 @@ class KendallsTau(object):
 
         logging.basicConfig(level=logging.INFO, format='%(asctime)s %(lineno)d: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',filename=os.path.join(cfg.LOGDIR,'stdout.log'))
 
-    def evaluate(self, dataset, cur_epoch, summary_writer,split = 'val'):
+    def evaluate(self, dataset, cur_epoch, summary_writer,split = 'val' , dataset_index = None):
         """Labeled evaluation."""
         # train_embs = dataset['train_dataset']['embs']
 
@@ -41,10 +57,14 @@ class KendallsTau(object):
         val_labels = dataset['labels']
         val_names = dataset['name']
 
-        tau = self.get_kendalls_tau(val_embs,val_labels,val_names, cur_epoch, summary_writer, split, visualize=False)
+        if "subset_name" in dataset:
+            split = dataset["subset_name"] + "_val"
+
+
+        tau = self.get_kendalls_tau(val_embs,val_labels,val_names, cur_epoch, summary_writer, split, visualize=False,dataset_index=dataset_index)
         return tau
 
-    def get_kendalls_tau(self, embs_list,labels_list,val_names, cur_epoch, summary_writer, split, visualize=True):
+    def get_kendalls_tau(self, embs_list,labels_list,val_names, cur_epoch, summary_writer, split, visualize=True,dataset_index=None,):
 
         query = np.random.randint(0,len(embs_list)+1)
         candidate = np.random.randint(0,len(embs_list)+1)
@@ -115,6 +135,9 @@ class KendallsTau(object):
             plt.setp(ax.get_yticklabels(), rotation=0, ha="right", rotation_mode="anchor",size=6)
         ax.set_xticks(np.arange(num_seqs,step=10))
         ax.set_yticks(np.arange(num_seqs, step=10))
+
+        if dataset_index is not None:
+            split = split + f"_{dataset_index}"
         plt.setp(ax.get_xticklabels(), rotation=90, ha="center", rotation_mode="anchor",size=6)
         plt.setp(ax.get_yticklabels(), rotation=0, ha="right", rotation_mode="anchor",size=6)
         plt.savefig(f"{self.cfg.LOGDIR}/{split}_tau_{cur_epoch}.png")

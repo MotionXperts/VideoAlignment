@@ -23,8 +23,8 @@ def construct_dataloader(cfg,split,algo=None,force_test=False):
                              num_workers=cfg.DATA.NUM_WORKERS,sampler=None,pin_memory=True,drop_last=True)]
     elif "penn_action" in cfg.PATH_TO_DATASET:
         dataset = PennAction(cfg,split,mode="train",algo=algo)
-        # train_sampler = ActionBatchSampler(cfg,dataset,batch_size=2)
-        # dataloader = torch.utils.data.DataLoader(dataset,batch_sampler=train_sampler,pin_memory=True,num_workers=cfg.DATA.NUM_WORKERS)
+        if "tcc" in cfg.TRAINING_ALGO:
+            sys.exit("TCC not implemented for PennAction!!")
         train_sampler = torch.utils.data.distributed.DistributedSampler(dataset) 
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=cfg.TRAIN.BATCH_SIZE, 
                                                 shuffle=True if train_sampler is None else False,

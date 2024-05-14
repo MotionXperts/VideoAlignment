@@ -3,6 +3,17 @@ import torch.nn as nn
 import torchvision.models as models
 import math
 from icecream import ic
+import sys
+import random
+import numpy as np
+
+def setup_seed(seed):
+    random.seed(seed)                          
+    np.random.seed(seed)                       
+    torch.manual_seed(seed)                    
+    torch.cuda.manual_seed(seed)               
+    torch.cuda.manual_seed_all(seed)           
+    torch.backends.cudnn.deterministic = True  
 
 class ResNet50(nn.Module):
     def __init__(self,tcc=False):
@@ -27,6 +38,7 @@ class ResNet50(nn.Module):
                 processing = x[:,i*frames_per_batch:]
             else:
                 processing = x[:,i*frames_per_batch:(i+1)*frames_per_batch]
+            
             processing = processing.contiguous().view(-1,C,W,H)
             ## feed into resnet
             self.backbone.eval()

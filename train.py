@@ -29,6 +29,7 @@ from model import save_checkpoint,load_checkpoint,build_model
 from torch.utils.tensorboard import SummaryWriter
 import logging
 from icecream import ic
+import sys
 
 ic.disable()
 
@@ -47,50 +48,50 @@ def setup_seed(seed):
 def get_lr(optimizer):
     return [param_group["lr"] for param_group in optimizer.param_groups]
 
-def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_writer,DEBUG=False,current_algo=None,lav=None,KD=None):
+def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_writer,scaler,DEBUG=False,current_algo=None,lav=None,KD=None):
     assert current_algo in ["SCL","TCC"]
 
     model.train()
     optimizer.zero_grad()
     total_loss = 0
+
+    # DistributedSampler shuffle based on epoch and seed
+    if hasattr(trainloader.sampler, 'set_epoch'):
+        trainloader.sampler.set_epoch(cur_epoch)
+    if hasattr(trainloader.batch_sampler, 'set_epoch'):
+        trainloader.batch_sampler.set_epoch(cur_epoch)
+
     loss = {}
 
     if du.is_root_proc():
         trainloader = tqdm(trainloader,total=len(trainloader))
     for cur_iter,(original_video,video,label,seq_len,steps,mask,name,skeleton) in enumerate(trainloader):
-
         optimizer.zero_grad()
-        scaler = torch.cuda.amp.GradScaler()
-        # with torch.cuda.amp.autocast():
-        #     loss = algo[current_algo].ori_compute_loss(model,video,seq_len,steps,mask)
-        batch_size, num_views, num_steps, c, h, w = video.shape
-        video = video.view(-1, num_steps, c, h, w)
-        embs = model(video,video_mask=mask,skeleton=skeleton)
-
-
 
         with torch.cuda.amp.autocast():
+            batch_size, num_views, num_steps, c, h, w = video.shape
+            video = video.view(-1, num_steps, c, h, w)
+            embs = model(video,video_masks=mask,skeleton=skeleton)
             loss = algo[current_algo].compute_loss(embs,seq_len.to(embs.device),steps.to(embs.device),mask.to(embs.device),images=original_video,summary_writer=summary_writer,epoch=cur_epoch,split="train")
             if lav is not None:
                 lav_loss = lav.compute_loss(embs,steps.to(embs.device),seq_len.to(embs.device))
                 loss=loss+lav_loss
         scaler.scale(loss).backward()
 
-
-
-        scaler.unscale_(optimizer)
-        torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.OPTIMIZER.GRAD_CLIP)
+        if cfg.OPTIMIZER.GRAD_CLIP > 0:
+            scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.OPTIMIZER.GRAD_CLIP)
         scaler.step(optimizer)
+        
         scaler.update()
+        
         loss[torch.isnan(loss)] = 0
-        ic(du.all_reduce([loss])[0].item() / len(trainloader))
         total_loss += du.all_reduce([loss])[0].item() / len(trainloader)
-
 
     if du.is_root_proc():
         if DEBUG:
             ## original video
-            summary_writer.add_video(f'train/ori_video', video, cur_epoch, fps=1)
+            # summary_writer.add_video(f'train/ori_video', video, cur_epoch, fps=1)
             ## add cost matrix as image
             _, _, _, path = dtw(embs[0].detach().cpu(), embs[1].detach().cpu(), dist='sqeuclidean')
             _, uix = np.unique(path[0], return_index=True)
@@ -106,7 +107,6 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
             summary_writer.add_video(f'train/aligned_video', aligned_video, cur_epoch, fps=1)
 
 
-        
         logger.info(f"epoch: {cur_epoch},total_loss:  {total_loss}")
         ## add 2(batch size) per-frame videos to tensorboard
         summary_writer.add_scalar('train/loss', total_loss, cur_epoch)
@@ -132,7 +132,7 @@ def val(algo,model,testloader,cur_epoch,summary_writer,current_algo=None):
         for cur_iter,(original_video,video,label,seq_len,steps,mask,name,skeleton) in enumerate(testloader):
             batch_size, num_views, num_steps, c, h, w = video.shape
             video = video.view(-1, num_steps, c, h, w)
-            embs = model(video,skeleton=skeleton,video_mask=mask)
+            embs = model(video,skeleton=skeleton,video_masks=mask)
             with torch.cuda.amp.autocast():
                 loss = algo[current_algo].compute_loss(embs,seq_len.to(embs.device),steps.to(embs.device),mask.to(embs.device),images=original_video,summary_writer=summary_writer,epoch=cur_epoch,split="train")
             total_loss += du.all_reduce([loss])[0].item() / len(testloader)
@@ -168,7 +168,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                 if cfg.MODEL.EMBEDDER_TYPE != 'conv':
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
                     with torch.cuda.amp.autocast():
-                        emb_feats = model(video,video_mask=None,skeleton=skeleton,split="eval")
+                        emb_feats = model(video,video_masks=None,skeleton=skeleton,split="eval")
                 else:
                     
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
@@ -181,7 +181,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                     input_video = video[steps.long()]
                     input_video = input_video.unsqueeze(0)
                     with torch.cuda.amp.autocast():
-                        emb_feats = model(input_video,video_mask=None,skeleton=skeleton,split="eval")
+                        emb_feats = model(input_video,video_masks=None,skeleton=skeleton,split="eval")
                 
                 
                 embs.append(emb_feats[0].cpu())
@@ -201,7 +201,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                 "labels":frame_labels_list,
             }
             KD.evaluate(dataset,epoch,summary_writer,split=split)
-            RE.evaluate(dataset,epoch,summary_writer,split=split)
+            # RE.evaluate(dataset,epoch,summary_writer,split=split)
         
             ## check one same q/c pair and check an arbitrary q/c pair
             queries = [0]
@@ -213,12 +213,82 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
             queries.append(query)
             candidates.append(candidate)
 
-            for query,candidate in zip(queries,candidates):
-                video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{query}_{candidate}.mp4')
-                print(f"creating video {video_name}")
-                labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
-                create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
-                    video_name,use_dtw=True,tsNE_only=(split=="train" or tsNE_only),labels=labels,cfg=cfg)
+            # for query,candidate in zip(queries,candidates):
+            #     video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{query}_{candidate}.mp4')
+            #     print(f"creating video {video_name}")
+            #     labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
+            #     create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
+            #         video_name,use_dtw=True,tsNE_only=(split=="train" or tsNE_only),labels=labels,cfg=cfg)
+
+
+def construct_optimizer(model, cfg):
+    """
+    Construct a stochastic gradient descent or ADAM optimizer with momentum.
+    Details can be found in:
+    Herbert Robbins, and Sutton Monro. "A stochastic approximation method."
+    and
+    Diederik P.Kingma, and Jimmy Ba.
+    "Adam: A Method for Stochastic Optimization."
+
+    Args:
+        model (model): model to perform stochastic gradient descent
+        optimization or ADAM optimization.
+        cfg (config): configs of hyper-parameters of SGD or ADAM, includes base
+        learning rate,  momentum, weight_decay, dampening, and etc.
+    """
+    # Batchnorm parameters.
+    bn_params = []
+    # Non-batchnorm parameters.
+    non_bn_parameters = []
+    for n, m in model.named_modules():
+        is_bn = isinstance(m, torch.nn.modules.batchnorm._NormBase)
+        for p in m.parameters(recurse=False):
+            if 'backbone' in n and cfg.MODEL.TRAIN_BASE != 'train_all':
+                if cfg.MODEL.TRAIN_BASE == 'frozen':
+                    continue
+                elif cfg.MODEL.TRAIN_BASE == 'only_bn':
+                    if is_bn:
+                        bn_params.append(p)
+            else:
+                if is_bn:
+                    bn_params.append(p)
+                else:
+                    non_bn_parameters.append(p)
+
+    # Apply different weight decay to Batchnorm and non-batchnorm parameters.
+    # In Caffe2 classification codebase the weight decay for batchnorm is 0.0.
+    # Having a different weight decay on batchnorm might cause a performance
+    # drop.
+    optim_params = [
+        {"params": bn_params, "weight_decay": cfg.OPTIMIZER.WEIGHT_DECAY},
+        {"params": non_bn_parameters, "weight_decay": cfg.OPTIMIZER.WEIGHT_DECAY},
+    ]
+
+    if cfg.OPTIMIZER.TYPE == "MomentumOptimizer":
+        return torch.optim.SGD(
+            optim_params,
+            lr=cfg.OPTIMIZER.LR.INITIAL_LR,
+            momentum=0.9,
+            weight_decay=cfg.OPTIMIZER.WEIGHT_DECAY,
+        )
+    elif cfg.OPTIMIZER.TYPE == "AdamOptimizer":
+        return torch.optim.Adam(
+            optim_params,
+            lr=cfg.OPTIMIZER.LR.INITIAL_LR,
+            betas=(0.9, 0.999),
+            weight_decay=cfg.OPTIMIZER.WEIGHT_DECAY,
+        )
+    elif cfg.OPTIMIZER.TYPE == "AdamWOptimizer":
+        return torch.optim.AdamW(
+            optim_params,
+            lr=cfg.OPTIMIZER.LR.INITIAL_LR,
+            betas=(0.9, 0.999),
+            weight_decay=cfg.OPTIMIZER.WEIGHT_DECAY,
+        )
+    else:
+        raise NotImplementedError(
+            "Does not support {} optimizer".format(cfg.OPTIMIZER.TYPE)
+        )
 
 def main():
     args = parse_args()
@@ -226,25 +296,33 @@ def main():
     cfg.PATH_TO_DATASET = os.path.join(args.workdir, cfg.PATH_TO_DATASET)
     cfg.args = args
 
+
+
+    cfg.TRAIN.SCL_BATCH_SIZE = 1
+    cfg.DATA.TEST_NAME = "test"
+
+
+
+
+
     assert "/".join(args.cfg_file.split("/")[:-1]) == cfg.LOGDIR, f"{'/'.join(args.cfg_file.split('/')[:-1])} and {cfg.LOGDIR} does not match, if u want to use ckpt from other directory, comment this line."
 
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(lineno)d: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',filename=os.path.join(cfg.LOGDIR,'stdout.log'))
 
-    setup_seed(7)
-
     dist.init_process_group(backend='nccl', init_method='env://')
-    
+
+    setup_seed(7)    
     model = build_model(cfg)
     torch.cuda.set_device(args.local_rank)
     model = model.cuda()
     model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank,find_unused_parameters=False)
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], 
+            output_device=args.local_rank,find_unused_parameters=False)
 
-    
-
-    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.OPTIMIZER.LR.INITIAL_LR,
-            betas=(0.9, 0.999),
-            weight_decay=cfg.OPTIMIZER.WEIGHT_DECAY,)
+    # optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.OPTIMIZER.LR.INITIAL_LR,
+    #         betas=(0.9, 0.999),
+    #         weight_decay=cfg.OPTIMIZER.WEIGHT_DECAY,)
+    optimizer = construct_optimizer(model,cfg)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg.TRAIN.MAX_EPOCHS + 1)
     summary_writer = SummaryWriter(os.path.join(cfg.LOGDIR, 'train_logs'))
 
@@ -279,11 +357,11 @@ def main():
     else:
         test_name = 'processed_videos_test'
     
-    if du.is_root_proc():
-        logger.info(f"train_name: {train_name}")
-        for name,param in model.named_parameters():
-            if param.requires_grad:
-                logger.info(f'training layer: {name}')
+    # if du.is_root_proc():
+    #     logger.info(f"train_name: {train_name}")
+    #     for name,param in model.named_parameters():
+    #         if param.requires_grad:
+    #             logger.info(f'training layer: {name}')
 
     if cfg.TRAINING_ALGO=='tcc_scl_tcc':
         train_loaders["TCC"],train_samplers["TCC"],train_eval_loaders["TCC"] = construct_dataloader(cfg, train_name,"tcc")
@@ -294,6 +372,7 @@ def main():
         train_loaders[cfg.TRAINING_ALGO.upper()],train_samplers[cfg.TRAINING_ALGO.upper()], train_eval_loaders[cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, train_name,cfg.TRAINING_ALGO)
         test_loaders [cfg.TRAINING_ALGO.upper()], _                                       , test_eval_loaders [cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, test_name,cfg.TRAINING_ALGO)
 
+    
 
     algo = {"TCC":TCC(cfg),"SCL":SCL(cfg)}
     lav = None
@@ -304,10 +383,11 @@ def main():
     RE = Retrieval(cfg)
 
     start_epoch = load_checkpoint(cfg,model,optimizer)
-
+    scaler = torch.cuda.amp.GradScaler()
     current_algo = cfg.TRAINING_ALGO.upper()
+
     try:
-        for epoch in range(start_epoch+1,cfg.TRAIN.MAX_EPOCHS+2):
+        for epoch in range(start_epoch,cfg.TRAIN.MAX_EPOCHS+2):
             if "_" in cfg.TRAINING_ALGO:
                 if epoch < cfg.TRAIN.FIRST_STAGE_EPOCHS:
                     current_algo = cfg.TRAINING_ALGO.split("_")[0].upper()
@@ -319,14 +399,8 @@ def main():
             train_sampler = train_samplers[current_algo]
             test_loader = test_loaders[current_algo]
             test_eval_loader = test_eval_loaders[current_algo]
-
-            train_sampler.set_epoch(epoch)
-            train(cfg,algo,model,train_loader,optimizer,scheduler,epoch,summary_writer,DEBUG=args.debug,current_algo=current_algo,lav=lav,KD=KD)
-            # if epoch % 100 == 0:
-            #     val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
-            #     if du.is_root_proc():
-            #         if epoch != 0:
-            #             evaluate(cfg,algo,model,epoch,test_eval_loader,summary_writer,KD,RE,split="test")
+            
+            train(cfg,algo,model,train_loader,optimizer,scheduler,epoch,summary_writer,scaler,DEBUG=args.debug,current_algo=current_algo,lav=lav,KD=KD)
             if (epoch+1) % 50 == 0 :
                 val(algo,model,test_loader,epoch,summary_writer,current_algo=current_algo) ## validation function should be placed out of du.is_root_proc()
                 if du.is_root_proc():
