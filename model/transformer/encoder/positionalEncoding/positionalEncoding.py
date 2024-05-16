@@ -10,6 +10,7 @@ class PositionalEncoding(nn.Module):
         if test:
             dout_p = 0
         self.dropout = nn.Dropout(dout_p)  
+        self.seq_len = cfg.TRAIN.NUM_FRAMES
 
     def encode(self,seq_len,embed_size,train_len=None):
         # construct all the odds entries
@@ -18,18 +19,28 @@ class PositionalEncoding(nn.Module):
         
         # construct multiple positional encoding since transformer operates parrellally
         pos_enc_mat = np.zeros((seq_len,embed_size)) ## Shape: (seq_len , d_model)
+        
+        if train_len is None:
+            pos_list = np.arange(seq_len)
+        else:
+            pos_list = np.linspace(0, train_len-1, num=seq_len)
+            
 
-        pos_list = np.arange(seq_len) ## [0 , 1 , 2 , 3 , 4 , .... , seq_len-1]
+
         for i,pos in enumerate((pos_list)):
             pos_enc_mat[i, odds]  = np.sin(pos / (10000 ** (odds / embed_size))) 
             pos_enc_mat[i, evens] = np.cos(pos / (10000 ** (evens / embed_size)))
 
         return torch.from_numpy(pos_enc_mat).unsqueeze(0) 
     
-    def forward(self,x):
-        B , T,embed_size = x.shape 
-        pos_enc_matrix = self.encode(T,embed_size) 
-        x = x + pos_enc_matrix.type_as(x)
+    def forward(self,x):    
+        B, T, embed_size = x.shape
+        if T != self.seq_len:
+            pos_enc_mat = self.encode(T, embed_size, self.seq_len)
+            x = x + pos_enc_mat.type_as(x)
+        else:
+            pos_enc_mat = self.encode(T, embed_size)
+            x = x + pos_enc_mat.type_as(x)
         x = self.dropout(x)
         return x
 

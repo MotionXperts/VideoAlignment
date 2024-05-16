@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument(
         "--demo_or_inference",
         help="Whether to run demo or inference",
-        default="demo",
+        default=None,
         type=str,
     )
 

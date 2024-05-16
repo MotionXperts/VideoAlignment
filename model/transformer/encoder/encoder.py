@@ -10,7 +10,7 @@ def clone(module,N):
 class Encoder(nn.Module):
     def __init__(self,cfg,embed_size, final_embed_size,dout_p,test=False):
         super().__init__()
-        self.positionalEncoding = PositionalEncoding(None,embed_size,dout_p=0.1,test=test)
+        self.positionalEncoding = PositionalEncoding(cfg,embed_size,dout_p=0.1,test=test)
         # self.encodingLayers = nn.ModuleList([deepcopy(EncodingLayer(embed_size,dout_p=0.0,test=test)) for _ in range(cfg.MODEL.EMBEDDER_MODEL.NUM_LAYERS)])
         self.encodingLayers = clone(EncodingLayer(embed_size,dout_p=0.0,test=test),cfg.MODEL.EMBEDDER_MODEL.NUM_LAYERS)
         if test:

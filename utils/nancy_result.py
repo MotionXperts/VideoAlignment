@@ -64,6 +64,7 @@ def align_by_start(cfg,video_name,dataset,query,candidate):
     frames = [video_list[query][query_start_frame:query_start_frame+len(std_emb)], video_list[candidate][candidate_start_frame:candidate_start_frame+len(std_emb)]]
     query,candidate = 0,1
 
+
     gen_result(start_frame,frames, video_name,query,candidate)
 
 def gen_result(start_frames, frames,output_name,query,candi ):

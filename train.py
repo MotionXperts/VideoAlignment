@@ -67,9 +67,11 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
         trainloader = tqdm(trainloader,total=len(trainloader))
     for cur_iter,(original_video,video,label,seq_len,steps,mask,name,skeleton) in enumerate(trainloader):
         optimizer.zero_grad()
-
         with torch.cuda.amp.autocast():
-            batch_size, num_views, num_steps, c, h, w = video.shape
+            if cfg.TRAINING_ALGO == "scl":
+                batch_size, num_views, num_steps, c, h, w = video.shape
+            else:
+                num_views, num_steps, c, h, w = video.shape
             video = video.view(-1, num_steps, c, h, w)
             embs = model(video,video_masks=mask,skeleton=skeleton)
             loss = algo[current_algo].compute_loss(embs,seq_len.to(embs.device),steps.to(embs.device),mask.to(embs.device),images=original_video,summary_writer=summary_writer,epoch=cur_epoch,split="train")
@@ -87,6 +89,8 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
         
         loss[torch.isnan(loss)] = 0
         total_loss += du.all_reduce([loss])[0].item() / len(trainloader)
+        # logger.info(f"embs: {embs.sum()}")
+        # logger.info(f"total_loss: {total_loss}")
 
     if du.is_root_proc():
         if DEBUG:
@@ -102,12 +106,12 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
             print("shape of video[1]: ", video[1].shape)
             print("uix: " , uix)
             print("nns: ", nns)
-            aligned_video = torch.stack([video[0][uix], video[1][nns]])
+            aligned_video = torch.stack([video[0], video[1][nns]])
             print("shape of aligned video: ", aligned_video.shape)
             summary_writer.add_video(f'train/aligned_video', aligned_video, cur_epoch, fps=1)
 
 
-        logger.info(f"epoch: {cur_epoch},total_loss:  {total_loss}")
+        logger.info("epoch {}, train loss: {:.3f}".format(cur_epoch, total_loss))
         ## add 2(batch size) per-frame videos to tensorboard
         summary_writer.add_scalar('train/loss', total_loss, cur_epoch)
         summary_writer.add_scalar('train/learning_rate', get_lr(optimizer)[0], cur_epoch)
@@ -164,7 +168,6 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                 assert video.size(0) == 1 # batch_size==1
                 try: seq_len = seq_len.item()
                 except: seq_len=seq_len
-                video = video.squeeze(0)
                 if cfg.MODEL.EMBEDDER_TYPE != 'conv':
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
                     with torch.cuda.amp.autocast():
@@ -200,6 +203,8 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                 "video":video_list,
                 "labels":frame_labels_list,
             }
+            if len(cfg.DATASETS) > 1:
+                dataset["subset_name"] = cfg.DATASETS[index]
             KD.evaluate(dataset,epoch,summary_writer,split=split)
             # RE.evaluate(dataset,epoch,summary_writer,split=split)
         
@@ -296,15 +301,6 @@ def main():
     cfg.PATH_TO_DATASET = os.path.join(args.workdir, cfg.PATH_TO_DATASET)
     cfg.args = args
 
-
-
-    cfg.TRAIN.SCL_BATCH_SIZE = 1
-    cfg.DATA.TEST_NAME = "test"
-
-
-
-
-
     assert "/".join(args.cfg_file.split("/")[:-1]) == cfg.LOGDIR, f"{'/'.join(args.cfg_file.split('/')[:-1])} and {cfg.LOGDIR} does not match, if u want to use ckpt from other directory, comment this line."
 
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(lineno)d: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',filename=os.path.join(cfg.LOGDIR,'stdout.log'))
@@ -373,7 +369,6 @@ def main():
         test_loaders [cfg.TRAINING_ALGO.upper()], _                                       , test_eval_loaders [cfg.TRAINING_ALGO.upper()] = construct_dataloader(cfg, test_name,cfg.TRAINING_ALGO)
 
     
-
     algo = {"TCC":TCC(cfg),"SCL":SCL(cfg)}
     lav = None
     if 'LAV' in cfg:

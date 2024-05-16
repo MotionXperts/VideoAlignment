@@ -31,13 +31,13 @@ class CARL(nn.Module):
         else:
             self.transformation = Transformation(in_channel=transfomation_in_channel,test=test)
 
-        self.encoder = Encoder(cfg,256,128,0.1,test=test)
+        self.encoder = Encoder(cfg,256,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,0.1,test=test)
         if self.cfg.MODEL.PROJECTION:
             self.projection = nn.Sequential(
-                nn.Linear(128,128),
-                nn.BatchNorm1d(128),
+                nn.Linear(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE),
+                nn.BatchNorm1d(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE),
                 nn.ReLU(True),
-                nn.Linear(128,128)
+                nn.Linear(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE)
             )
             if test : 
                 for name,parameter in self.projection.named_parameters():

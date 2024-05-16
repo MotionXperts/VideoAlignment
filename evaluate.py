@@ -26,6 +26,8 @@ from torch.utils.tensorboard import SummaryWriter
 from icecream import ic
 
 import logging
+import torch
+import math
 
 pylogger = logging.getLogger("torch.distributed")
 pylogger.setLevel(logging.ERROR)
@@ -51,10 +53,10 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
     model.eval()
     embs_list = []
     video_list = []
+    original_video_list = []
     with torch.no_grad():
         for index,dataset in enumerate(loader):
-            for cur_iter,(original_video,video,frame_label,seq_len,chosen_steps,mask,names,skeleton) in enumerate(loader[index]):
-                video = video.squeeze(0)
+            for _,(original_video,video,frame_label,seq_len,chosen_steps,mask,names,skeleton) in enumerate(loader[index]):
                 original_video=original_video.squeeze(0)
                 embs = []
                 seq_len = seq_len.item()
@@ -62,7 +64,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                 if cfg.MODEL.EMBEDDER_TYPE != 'conv':
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
                     with torch.cuda.amp.autocast():
-                        emb_feats = model(video,video_masks=None,skeleton=skeleton)
+                        emb_feats = model(video,video_masks=None,skeleton=skeleton,split="test")
                 else:
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
                     steps = torch.arange(0, seq_len, cfg.DATA.SAMPLE_ALL_STRIDE)
@@ -75,7 +77,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                     input_video = video[steps.long()]
                     input_video = input_video.unsqueeze(0)
                     with torch.cuda.amp.autocast():
-                        emb_feats = model(input_video,video_masks=None)
+                        emb_feats = model(input_video,video_masks=None,split="test")
                 embs.append(emb_feats[0].cpu())
                 valid = (frame_label[0]>=0)
                 embs = torch.cat(embs, dim=0)
@@ -86,18 +88,20 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                 steps_list.append(chosen_steps[0].cpu().numpy())
                 names_list.append(names[0])
                 video_list.append(video.squeeze(0).permute(0,2,3,1))
+                original_video_list.append(original_video.squeeze(0))
             dataset = {
                 "embs":embs_list,
-                "name":names_list,
-                "video":video_list,
+                "names":names_list,
+                "videos":video_list,
                 "labels":frame_labels_list,
+                "original_videos":original_video_list,
             }
 
             ## append the standard emb to training and validation to generate video
             if standard_entry is not None:
                 dataset["embs"].append(standard_entry["embs"])
-                dataset["name"].append(standard_entry["name"])
-                dataset["video"].append(standard_entry["video"])
+                dataset["names"].append(standard_entry["name"])
+                dataset["videos"].append(standard_entry["video"])
                 dataset["labels"].append(standard_entry["labels"])
             
             if len(cfg.DATASETS) > 1:
@@ -119,16 +123,19 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                         queries.append(np.random.randint(0,len(names_list)))
                         candidates.append(np.random.randint(0,len(names_list)))
                 else:
-                    queries = [-1]
+                    queries = []
                     candidates = []
-                    for i in range(0,len(dataset["name"])):
+                    for i in range(0,len(dataset["names"])):
+                        if names_list[i] == names_list[-1]:
+                            continue
                         queries.append(-1)
                         candidates.append(i)
+                    # queries,candidates = candidates,queries
                 
                 for query,candidate in zip(queries,candidates):
                     while candidate == query:
                         candidate = np.random.randint(0,len(names_list))
-                    if  du.is_root_proc():
+                    if du.is_root_proc():
                         if cfg.args.nc :
                             video_name = os.path.join(cfg.LOGDIR,'NC_align',f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
                         else:
@@ -137,17 +144,18 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
 
                         if not os.path.exists(video_name) and "cam2_GX010274" not in video_name:
                             if cfg.args.nc :
+                                if not os.path.exists(os.path.join(cfg.LOGDIR,'NC_align')):
+                                    os.makedirs(os.path.join(cfg.LOGDIR,'NC_align'),exist_ok = True)
                                 align_by_start(cfg,video_name,dataset,query,candidate)
                             else:
                                 labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
-                                create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
+                                create_video(embs_list[query],original_video_list[query],embs_list[candidate],original_video_list[candidate],
                                         video_name,use_dtw=("no_dtw" not in video_name),interval=200,labels=labels,cfg=cfg)
-
     ## delete the appended standard as we have done producing video and we want to match the assertion in dump nn frames
     if standard_entry is not None:
         del dataset["embs"][-1]
-        del dataset["name"][-1]
-        del dataset["video"][-1]
+        del dataset["names"][-1]
+        del dataset["videos"][-1]
         del dataset["labels"][-1]
     return dataset
 def main():
@@ -174,7 +182,11 @@ def main():
     else:
         raise Exception("Please specify a test name in config file or in command line.")
 
-
+    # if cfg.args.path_to_dataset is not None:
+    #     cfg.PATH_TO_DATASET = "/".join(cfg.args.path_to_dataset.split("/")[:-1])
+    #     test_name = cfg.args.path_to_dataset.split("/")[-1].split(".")[0]
+    #     print("Overwriting path to dataset to ",cfg.PATH_TO_DATASET)
+    #     print("Overwriting test name to ",test_name)
     testloader,_, test_eval_loader = construct_dataloader(cfg, test_name,cfg.TRAINING_ALGO.split("_")[0],force_test=True)
     algo = {"TCC":TCC(cfg)}    
     KD = KendallsTau(cfg)
@@ -184,7 +196,7 @@ def main():
     
     print("Retreiving test dataset and standard entry ...")
     test_dataset = evaluate(cfg,algo,model,start_epoch,test_eval_loader,summary_writer,KD,RE,split=test_name,generate_video=args.generate,no_compute_metrics=args.no_compute_metrics)
-    standard_entry = {"embs":test_dataset["embs"][-1],"name":test_dataset["name"][-1],"video":test_dataset["video"][-1],"labels":test_dataset["labels"][-1]}
+    standard_entry = {"embs":test_dataset["embs"][-1],"name":test_dataset["names"][-1],"video":test_dataset["videos"][-1],"labels":test_dataset["labels"][-1]}
 
 
     if cfg.args.align_standard:

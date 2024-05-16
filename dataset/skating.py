@@ -83,45 +83,49 @@ class Skating(torch.utils.data.Dataset):
         seq_len = self.dataset[index]["seq_len"]
         if self.train is not None:
             video = torch.from_numpy(self.train[index]["video"])
-            print(self.train[index]['name'])
         else:
-            video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["video_file"])
+            if hasattr(self.cfg.DATA,'SKELETON_VIDEO') and self.cfg.DATA.SKELETON_VIDEO:
+                video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["skeleton_heatmap_file"])
+            else:
+                video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["video_file"])
             video, _, info = read_video(video_file, pts_unit='sec')
         
         video = video.permute(0,3,1,2).float() / 255.0 # T H W C -> T C H W, [0,1] tensor
 
         skeleton = 0
-        if hasattr(self.cfg.DATA, "SKELETON") and self.cfg.DATA.SKELETON:
-            if "skeleton_file" in self.dataset[index]:
-                skeleton = {}
-                skeleton_file = self.dataset[index]["skeleton_file"] 
-                with open(skeleton_file,"r") as file:
-                    json_skeletons = json.load(file)
-                for json_skeleton in json_skeletons:
-                    image_id = json_skeleton["image_id"]
-                    skeleton[image_id] = json_skeleton["keypoints"]
-                previous_image_id = -1
+        # if hasattr(self.cfg.DATA, "SKELETON") and self.cfg.DATA.SKELETON:
+        #     if "skeleton_file" in self.dataset[index]:
+        #         skeleton = {}
+        #         skeleton_file = self.dataset[index]["skeleton_file"] 
+        #         with open(skeleton_file,"r") as file:
+        #             json_skeletons = json.load(file)
+        #         for json_skeleton in json_skeletons:
+        #             image_id = json_skeleton["image_id"]
+        #             skeleton[image_id] = json_skeleton["keypoints"]
+        #         previous_image_id = -1
 
-                tmp_skeleton = skeleton.copy()
+        #         tmp_skeleton = skeleton.copy()
 
-                for image_id in (skeleton):
-                    int_image_id = int(image_id.split(".jpg")[0])
-                    if previous_image_id +1 !=int_image_id:
-                        while previous_image_id+1 != int_image_id:
-                            ## this will mend missing frame using next known frame (e.g: if 22 and 25 are known, then 23 and 24 will be filled with 25)
-                            tmp_skeleton[str(previous_image_id+1).zfill(4)+".jpg"] = skeleton[image_id] 
-                            previous_image_id +=1
-                    previous_image_id = int_image_id
+        #         for image_id in (skeleton):
+        #             int_image_id = int(image_id.split(".jpg")[0])
+        #             if previous_image_id +1 !=int_image_id:
+        #                 while previous_image_id+1 != int_image_id:
+        #                     ## this will mend missing frame using next known frame (e.g: if 22 and 25 are known, then 23 and 24 will be filled with 25)
+        #                     tmp_skeleton[str(previous_image_id+1).zfill(4)+".jpg"] = skeleton[image_id] 
+        #                     previous_image_id +=1
+        #             previous_image_id = int_image_id
 
-                tmp_skeleton_length = len(tmp_skeleton)
-                while tmp_skeleton_length < seq_len:
-                    tmp_skeleton[str(tmp_skeleton_length).zfill(4)+".jpg"] = skeleton[image_id]
-                    tmp_skeleton_length +=1
+        #         tmp_skeleton_length = len(tmp_skeleton)
+        #         while tmp_skeleton_length < seq_len:
+        #             tmp_skeleton[str(tmp_skeleton_length).zfill(4)+".jpg"] = skeleton[image_id]
+        #             tmp_skeleton_length +=1
 
 
-                tmp_skeleton = dict(sorted(tmp_skeleton.items(), key=lambda item: int(item[0].split(".jpg")[0])))
+        #         tmp_skeleton = dict(sorted(tmp_skeleton.items(), key=lambda item: int(item[0].split(".jpg")[0])))
 
-                skeleton = torch.from_numpy(np.array(list(tmp_skeleton.values()))).type_as(video)
+        #         skeleton = torch.from_numpy(np.array(list(tmp_skeleton.values()))).type_as(video)
+
+
 
         if self.train is None:
             assert len(video) == seq_len
@@ -156,17 +160,16 @@ class Skating(torch.utils.data.Dataset):
         if hasattr(self.cfg.DATA, "SKELETON") and self.cfg.DATA.SKELETON:
             skeleton = skeleton[steps.long()]
         ## not flipping skeleton right now.
-        if "original_video_file" in self.dataset[index]:
-            original_video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["original_video_file"])
+        if "original_video" in self.dataset[index]:
+            original_video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["original_video"])
             original_video, _, _ = read_video(original_video_file, pts_unit='sec')
-            original_video = original_video.permute(0,3,1,2).float() / 255.0 # T H W C -> T C H W, [0,1] tensor
+            assert len(original_video) == seq_len
         else:
             try:
                 original_video = self.b4_norm(video)
             except:
                 original_video = video.clone()
         video = self.data_preprocess(video)
-        video = video.unsqueeze(0)
         original_video = original_video.unsqueeze(0)
         video_mask=video_mask.unsqueeze(0)
         label = frame_label[chosen_steps.long()]

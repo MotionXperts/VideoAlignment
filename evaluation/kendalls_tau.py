@@ -55,7 +55,7 @@ class KendallsTau(object):
 
         val_embs = dataset['embs']
         val_labels = dataset['labels']
-        val_names = dataset['name']
+        val_names = dataset['names']
 
         if "subset_name" in dataset:
             split = dataset["subset_name"] + "_val"
@@ -140,7 +140,9 @@ class KendallsTau(object):
             split = split + f"_{dataset_index}"
         plt.setp(ax.get_xticklabels(), rotation=90, ha="center", rotation_mode="anchor",size=6)
         plt.setp(ax.get_yticklabels(), rotation=0, ha="right", rotation_mode="anchor",size=6)
-        plt.savefig(f"{self.cfg.LOGDIR}/{split}_tau_{cur_epoch}.png")
+        if not os.path.exists(f"{self.cfg.LOGDIR}/KD"):
+            os.makedirs(f"{self.cfg.LOGDIR}/KD")
+        plt.savefig(f"{self.cfg.LOGDIR}/KD/{split}_tau_{cur_epoch}.png")
         plt.close()
 
         tau = np.mean(taus)

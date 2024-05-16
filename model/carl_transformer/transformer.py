@@ -122,11 +122,10 @@ def generate_sincos_embedding(seq_len, d_model, train_len=None):
     evens = np.arange(1, d_model, 2)
     pos_enc_mat = np.zeros((seq_len, d_model))
 
-    # if train_len is None:
-    #     pos_list = np.arange(seq_len)
-    # else:
-    #     pos_list = np.linspace(0, train_len-1, num=seq_len)
-    pos_list = np.arange(seq_len)
+    if train_len is None:
+        pos_list = np.arange(seq_len)
+    else:
+        pos_list = np.linspace(0, train_len-1, num=seq_len)
 
     for i, pos in enumerate(pos_list):
         pos_enc_mat[i, odds] = np.sin(pos / (10000 ** (odds / d_model)))
@@ -309,7 +308,7 @@ class TransformerEmbModel(nn.Module):
             for name,paramter in self.embedding_layer.named_parameters():
                 paramter.data.fill_(.1)
 
-    def forward(self, x, video_masks=None):
+    def forward(self, x, video_maskss=None):
         batch_size, num_steps, c, h, w = x.shape
         x_res = x
         x = x.view(batch_size*num_steps, c, h, w)
@@ -326,11 +325,10 @@ class TransformerEmbModel(nn.Module):
         x = x.view(batch_size, num_steps, x.size(1))
 
         x_transform = x
-
         x = self.video_pos_enc(x)
         x_pos = x
         if self.cfg.MODEL.EMBEDDER_MODEL.NUM_LAYERS > 0:
-            x = self.video_encoder(x, src_mask=video_masks)
+            x = self.video_encoder(x, src_mask=video_maskss)
         x_encoding_layer = x
         
 
@@ -371,14 +369,13 @@ class TransformerModel(nn.Module):
             from ..transformer.transformer import CARL
             self.mine = CARL(cfg,test=True)
 
-    def forward(self, x, num_frames=None, video_mask=None,skeleton=None, classification=False,split="train"):
+    def forward(self, x, num_frames=None, video_masks=None,skeleton=None, classification=False,split="train"):
         torch.set_printoptions(sci_mode=False)
         np.set_printoptions(suppress=True)
 
         ori_x = x
 
         batch_size, num_steps, c, h, w = x.shape
-        # print('num steps: ',num_steps)
         frames_per_batch = self.cfg.MODEL.BASE_MODEL.FRAMES_PER_BATCH
         num_blocks = int(math.ceil(float(num_steps)/frames_per_batch))
         backbone_out = []
@@ -395,18 +392,18 @@ class TransformerModel(nn.Module):
             curr_emb = curr_emb.contiguous().view(batch_size, cur_steps, out_c, out_h, out_w)
             backbone_out.append(curr_emb)
         x = torch.cat(backbone_out, dim=1)
-        x_res,x_reshape,x_pooling,x_flatten,x_fc,x_emb,x_transform,x_pos,x_encoding_layer,x_encoder = self.embed(x, video_masks=video_mask)
-
+        x_res,x_reshape,x_pooling,x_flatten,x_fc,x_emb,x_transform,x_pos,x_encoding_layer,x_encoder = self.embed(x, video_maskss=video_masks)
         if self.test:
             mine_res = self.mine.resnet50(ori_x)
             mine_transformation = self.mine.transformation(mine_res,batch_size,num_steps)
-            mine_encoder = self.mine.encoder(mine_transformation,video_mask)
+            mine_encoder = self.mine.encoder(mine_transformation,video_masks)
+
 
         if self.cfg.MODEL.PROJECTION and split=="train":
             x1,x2,x = self.ssl_projection(x_encoder)
             x = F.normalize(x, dim=-1)
         elif self.cfg.MODEL.L2_NORMALIZE:
-            x = F.normalize(x, dim=-1)
+            x = F.normalize(x_encoder, dim=-1)
         if classification:
             return self.classifier(x)
         

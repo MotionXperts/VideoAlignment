@@ -128,7 +128,7 @@ class PennAction(torch.utils.data.Dataset):
         video = video[steps.long()]
         original_video = video.clone()
         video = self.data_preprocess(video)
-        video = video.unsqueeze(0)
+        # video = video.unsqueeze(0)
         video_mask=video_mask.unsqueeze(0)
         label = frame_label[chosen_steps.long()]
         skeleton=0

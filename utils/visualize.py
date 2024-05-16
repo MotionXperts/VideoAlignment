@@ -58,7 +58,25 @@ def dist_fn(x, y):
     dist = np.sum((x-y)**2)
     return dist
 
-def viz_tSNE(embs,frames,output_path,use_dtw=False,query=0,labels=None,cfg=None):
+def frame_tSNE(embs,output_path,use_dtw=False,labels=None,cfg=None):
+    X1 = embs[0]
+    X2 = embs[1]
+    tsne = manifold.TSNE(n_components=2, init='random', random_state=5, verbose=0)
+
+    X1_embedded = tsne.fit_transform(X1.reshape(-1,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE))
+    X2_embedded = tsne.fit_transform(X2.reshape(-1,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE))
+
+    embeddings = np.concatenate((X1_embedded,X2_embedded),axis=0)
+    plt.figure(figsize=(8, 8))
+    plt.xticks([])
+    plt.yticks([])
+    colors = np.arange(len(embeddings))
+    for i,(x,y) in enumerate(embeddings):
+        plt.text(x,y,str(i),color=plt.cm.Set1(colors[i]),fontdict={'weight': 'bold', 'size': 9})
+    plt.savefig(output_path)
+    plt.close('all')    
+
+def viz_tSNE(embs,output_path,use_dtw=False,query=0,labels=None,cfg=None):
     nns = []
     distances = []
     idx = np.arange(len(embs))
@@ -110,7 +128,7 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
     kendalls_embs = []
     kendalls_embs.append(query_embs)
     kendalls_embs.append(key_embs)
-    viz_tSNE(kendalls_embs,None,video_path.split('.mp4')[0]+('.jpg'),use_dtw=use_dtw,labels=labels,cfg=cfg)
+    viz_tSNE(kendalls_embs,video_path.split('.mp4')[0]+('.jpg'),use_dtw=use_dtw,labels=labels,cfg=cfg)
     
 
     plt.figure(figsize=(5,1))
