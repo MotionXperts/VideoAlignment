@@ -14,13 +14,15 @@ def unnorm(query_frame):
   query_frame = (query_frame - min_v) / (max_v - min_v)
   return query_frame
 
+
+
 def align_by_start(cfg,video_name,dataset,query,candidate):
     ## in this case, load 2 video and compare their min distance to the standard embedding
     # std_loader, std_eval_loader = construct_dataloader(cfg, 'standard')
 
     embs_list = dataset["embs"]
-    video_list = dataset["video"]
-    names_list = dataset["name"]
+    video_list = dataset["videos"]
+    names_list = dataset["names"]
 
 
     assert 'standard' in names_list[-1],ic(names_list[-1])
@@ -33,7 +35,8 @@ def align_by_start(cfg,video_name,dataset,query,candidate):
 
     def get_start_frame(CONFIG, emb, emb_name, standard_emb):
         min_dists = []
-
+        naive_distances = []
+        print(len(emb), len(standard_emb))
         if len(emb) < len(standard_emb): ## pad the emb so that it can at least match with the first frame
             for i in range(len(standard_emb)-len(emb)+1):
                 emb=  np.vstack((emb,(emb[-1])))
@@ -42,28 +45,44 @@ def align_by_start(cfg,video_name,dataset,query,candidate):
             query_embs = emb[i:i+len(standard_emb)]   ## * compare in which window
             min_dist, cost_matrix, acc_cost_matrix, path = dtw(query_embs, standard_emb, dist=dist_fn) ## * the dtw yields
             min_dists.append(min_dist)
+            ## get distance in interval as well
+            naive_distance = np.sum(np.array([np.sum((query_embs[j]-standard_emb[j])**2) for j in range(len(query_embs))]))
+            naive_distances.append(naive_distance)
+
+
         if len(emb) == len(standard_emb):
-           start_frame = 0
+          start_frame = 0
+          naive_start_frame = 0
         else:
           start_frame = min_dists.index(min(min_dists)) ## * the smallest value (set it as start frame)
-      
+          naive_start_frame = naive_distances.index(min(naive_distances)) ## * the smallest value (set it as start frame)
+        print(f"naive distances: " , naive_distances)
+        print(f"min_dists: " , min_dists)
+        print(f"naive_start_frame: " , naive_start_frame)
+        print(f"start_frame: " , start_frame)
 
         # Plot min_dist calculation
-        # os.makedirs(os.path.join(CONFIG.LOGDIR,'NC_align'),exist_ok = True)
-        # x = np.arange(0, len(emb)-len(standard_emb))
-        # plt.plot(x, min_dists, '-ro', markevery=[start_frame])
-        # plt.savefig(os.path.join(CONFIG.LOGDIR,'NC_align' , f'min_dists_{emb_name}'))
-        # plt.clf()
+        os.makedirs(os.path.join(CONFIG.LOGDIR,'NC_align'),exist_ok = True)
+        x = np.arange(0, len(emb)-len(standard_emb))
+        plt.plot(x, min_dists, '-ro', markevery=[start_frame])
+        plt.savefig(os.path.join(CONFIG.LOGDIR,'NC_align' , f'min_dists_{emb_name}_dtw'))
+        plt.clf()
+
+        x = np.arange(0, len(emb)-len(standard_emb))
+        plt.plot(x, naive_distances, '-ro', markevery=[naive_start_frame])
+        plt.savefig(os.path.join(CONFIG.LOGDIR,'NC_align' , f'min_dists_{emb_name}_naive'))
+        plt.clf()
+
         return start_frame
     
+    
     query_start_frame = get_start_frame(cfg, embs_list[query], names_list[query], std_emb)
-    candidate_start_frame = get_start_frame(cfg, embs_list[candidate], names_list[candidate], std_emb)
+    candidate_start_frame = get_start_frame(cfg, std_emb, names_list[candidate], embs_list[candidate])
 
-    ic(f"{query_start_frame}/{len(embs_list[query])} {candidate_start_frame}/{len(embs_list[candidate])}")
     start_frame = [query_start_frame, candidate_start_frame]
-    frames = [video_list[query][query_start_frame:query_start_frame+len(std_emb)], video_list[candidate][candidate_start_frame:candidate_start_frame+len(std_emb)]]
+    # frames = [video_list[query][query_start_frame:query_start_frame+len(std_emb)], video_list[candidate][candidate_start_frame:candidate_start_frame+len(std_emb)]]
+    frames = [video_list[query][candidate_start_frame:candidate_start_frame+len(video_list[candidate])],video_list[candidate]]
     query,candidate = 0,1
-
 
     gen_result(start_frame,frames, video_name,query,candidate)
 
@@ -83,8 +102,6 @@ def gen_result(start_frames, frames,output_name,query,candi ):
   
   num_total_frames = min([len(frames[query]), len(frames[candi])])
   def update(i):
-    if i % 10 ==0:
-      print(f'{i}/{num_total_frames}')
     ims[0].set_data(unnorm(frames[query][i]))
     ax[0].set_title('START {} '.format(start_frames[query]), fontsize = 14)
     ims[1].set_data(unnorm(frames[candi][i]))

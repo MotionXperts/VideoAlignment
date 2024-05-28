@@ -64,20 +64,50 @@ def _traceback(D):
 if __name__ == "__main__":
     import numpy as np
     def dist_fn(x, y):
-        dist = np.sum((x-y)**2)
+        dist = np.sum(np.abs(x-y))
         return dist
 
-    x = array([2, 0, 1, 1, 2, 4, 2, 1, 2, 0]).reshape(-1, 1)
-    y = array([1, 1, 2, 4, 2, 1, 2, 0]).reshape(-1, 1)
+    # x = array([2, 0, 1, 1, 2, 4, 2, 1, 2, 0]).reshape(-1, 1)
+    # y = array([1, 1, 2, 4, 2, 1, 2, 0]).reshape(-1, 1)
 
-    # manhattan_distance = lambda x, y: np.abs(x - y)
+    # d, cost_matrix, acc_cost_matrix, path = dtw(x, y, dist=dist_fn)
 
-    d, cost_matrix, acc_cost_matrix, path = dtw(x, y, dist=dist_fn)
+    # ic(d)
+    # ic(cost_matrix)
+    # ic(acc_cost_matrix)
+    # ic(path)
+    # _, uix = np.unique(path[0], return_index=True)
+    # ic(uix)
+    # ic(path[1][uix])
 
-    ic(d)
-    ic(cost_matrix)
-    ic(acc_cost_matrix)
-    ic(path)
-    _, uix = np.unique(path[0], return_index=True)
-    ic(uix)
-    ic(path[1][uix])
+    # # manhattan_distance = lambda x, y: np.abs(x - y)
+    # ic(len(x))
+    # ic(len(y))
+    # for embs in range(len(x) - len(y)+1) :
+    #     print("embs: " , embs)
+    #     tmp = x[embs:embs+len(y)]        
+    #     d, cost_matrix, acc_cost_matrix, path = dtw(tmp, y, dist=dist_fn)
+
+    #     ic(d)
+    #     ic(cost_matrix)
+    #     ic(acc_cost_matrix)
+    #     ic(path)
+    #     _, uix = np.unique(path[0], return_index=True)
+    #     ic(uix)
+    #     ic(path[1][uix])
+    
+    y = array([2,0,2,0]).reshape(-1, 1)
+    x = array([1, 1, 1,1,4,2,4,2]).reshape(-1, 1)
+
+    for embs in range(len(x) - len(y)+1) :
+        print("embs: " , embs)
+        tmp = x[embs:embs+len(y)]
+        d, cost_matrix, acc_cost_matrix, path = dtw(tmp, y, dist=dist_fn)
+
+        ic(d)
+        ic(cost_matrix)
+        ic(acc_cost_matrix)
+        ic(path)
+        _, uix = np.unique(path[0], return_index=True)
+        ic(uix)
+        ic(path[1][uix])

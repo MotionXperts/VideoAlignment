@@ -160,13 +160,13 @@ class Skating(torch.utils.data.Dataset):
         if hasattr(self.cfg.DATA, "SKELETON") and self.cfg.DATA.SKELETON:
             skeleton = skeleton[steps.long()]
         ## not flipping skeleton right now.
-        if "original_video" in self.dataset[index]:
+        if "original_video" in self.dataset[index] and self.cfg.args.use_ori:
             original_video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["original_video"])
             original_video, _, _ = read_video(original_video_file, pts_unit='sec')
             assert len(original_video) == seq_len
         else:
             try:
-                original_video = self.b4_norm(video)
+                original_video = (self.b4_norm(video)).permute(0,2,3,1)
             except:
                 original_video = video.clone()
         video = self.data_preprocess(video)

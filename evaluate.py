@@ -31,6 +31,7 @@ import math
 
 pylogger = logging.getLogger("torch.distributed")
 pylogger.setLevel(logging.ERROR)
+logger=logging.getLogger(__name__)
 
 ic.disable()
 
@@ -113,28 +114,24 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
             
 
             if generate_video:
+                queries = []
+                candidates = []
                 if cfg.args.query is not None and cfg.args.candidate is not None:
                     queries = [cfg.args.query]
                     candidates = [cfg.args.candidate]
                 elif cfg.args.random>0:
-                    queries = []
-                    candidates = []
                     for i in range(cfg.args.random):
                         queries.append(np.random.randint(0,len(names_list)))
                         candidates.append(np.random.randint(0,len(names_list)))
                 else:
-                    queries = []
-                    candidates = []
                     for i in range(0,len(dataset["names"])):
                         if names_list[i] == names_list[-1]:
                             continue
                         queries.append(-1)
                         candidates.append(i)
-                    # queries,candidates = candidates,queries
+                    
                 
                 for query,candidate in zip(queries,candidates):
-                    while candidate == query:
-                        candidate = np.random.randint(0,len(names_list))
                     if du.is_root_proc():
                         if cfg.args.nc :
                             video_name = os.path.join(cfg.LOGDIR,'NC_align',f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
@@ -142,7 +139,8 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
                             video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{names_list[query]}_{names_list[candidate]}_({len(embs_list[query])}_{len(embs_list[candidate])}).mp4')
                         print(f"generating video {video_name}")
 
-                        if not os.path.exists(video_name) and "cam2_GX010274" not in video_name:
+                        # if not os.path.exists(video_name) and "cam2_GX010274" not in video_name:
+                        if True:
                             if cfg.args.nc :
                                 if not os.path.exists(os.path.join(cfg.LOGDIR,'NC_align')):
                                     os.makedirs(os.path.join(cfg.LOGDIR,'NC_align'),exist_ok = True)
@@ -158,14 +156,16 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",genera
         del dataset["videos"][-1]
         del dataset["labels"][-1]
     return dataset
+
 def main():
     args = parse_args()
     cfg = load_config(args)
     cfg.PATH_TO_DATASET = os.path.join(args.workdir, cfg.PATH_TO_DATASET)
     cfg.args = args
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(lineno)d: %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
+                            filename=os.path.join(cfg.LOGDIR,'stdout.log'))
 
     setup_seed(7)
-
     dist.init_process_group(backend='nccl', init_method='env://')
     model = build_model(cfg)
     torch.cuda.set_device(args.local_rank)
@@ -191,12 +191,21 @@ def main():
     algo = {"TCC":TCC(cfg)}    
     KD = KendallsTau(cfg)
     RE = Retrieval(cfg)
-    start_epoch = load_checkpoint(cfg,model,None,args.ckpt)
 
-    
-    print("Retreiving test dataset and standard entry ...")
-    test_dataset = evaluate(cfg,algo,model,start_epoch,test_eval_loader,summary_writer,KD,RE,split=test_name,generate_video=args.generate,no_compute_metrics=args.no_compute_metrics)
-    standard_entry = {"embs":test_dataset["embs"][-1],"name":test_dataset["names"][-1],"video":test_dataset["videos"][-1],"labels":test_dataset["labels"][-1]}
+    if args.eval_multi:
+        from glob import glob
+        if du.is_root_proc():
+            logger.info("Evaluating multiple checkpoints")
+        checkpoints = glob(os.path.join(cfg.LOGDIR,"checkpoints","*.pth"))
+        assert args.generate == False, "Cannot generate video when evaluating multiple checkpoints"
+    else:
+        checkpoints = [args.ckpt]
+
+    for ckpt in checkpoints:
+        start_epoch = load_checkpoint(cfg,model,None,ckpt)   
+        print("Retreiving test dataset and standard entry ...")
+        test_dataset = evaluate(cfg,algo,model,start_epoch,test_eval_loader,summary_writer,KD,RE,split=test_name,generate_video=args.generate,no_compute_metrics=args.no_compute_metrics)
+        standard_entry = {"embs":test_dataset["embs"][-1],"name":test_dataset["names"][-1],"video":test_dataset["videos"][-1],"labels":test_dataset["labels"][-1]}
 
 
     if cfg.args.align_standard:

@@ -46,18 +46,12 @@ def parse_args():
         type=int,
     )
 
-    parser.add_argument('--record', action='store_true',
-                        default=False)
+    parser.add_argument('--record', action='store_true',default=False)
 
     parser.add_argument('--debug',action="store_true",default=False)
     
-    parser.add_argument('--ckpt',
-                        default=None,
-                        type=str,
-                        help='Path to checkpoint')
-    parser.add_argument("--generate",
-                        action="store_true",
-                        default=False)
+    parser.add_argument('--ckpt',default=None,type=str,help='Path to checkpoint')
+    parser.add_argument("--generate",action="store_true",default=False)
     parser.add_argument("--carl",action="store_true",default=False)
     parser.add_argument("--no_compute_metrics",action="store_true",default=False)
     parser.add_argument("--nc",action="store_true",default=False)
@@ -67,6 +61,15 @@ def parse_args():
     parser.add_argument("--candidate",default=None,type=int)
     parser.add_argument("--random",default=0,type=int)
     parser.add_argument("--overwrite",action="store_true",default=False)
+    parser.add_argument('--use_ori',action="store_true",default=False)
+    parser.add_argument('--eval_multi',action="store_true",default=False)
+
+    args = parser.parse_args()
+
+    if args.eval_multi:
+        assert not args.generate, "Cannot generate multiple videos when specifying eval_multi"
+        assert not args.ckpt,"Flag eval multi conflicts with ckpt"
+        assert not args.no_compute_metrics,"Flag eval multi conflicts with no_compute_metrics"
 
 
     return parser.parse_args()

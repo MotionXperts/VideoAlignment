@@ -31,6 +31,8 @@ import logging
 from icecream import ic
 import sys
 
+USER = os.environ["USER"]
+
 ic.disable()
 
 pylogger = logging.getLogger("torch.distributed")
@@ -136,7 +138,7 @@ def val(algo,model,testloader,cur_epoch,summary_writer,current_algo=None):
         for cur_iter,(original_video,video,label,seq_len,steps,mask,name,skeleton) in enumerate(testloader):
             batch_size, num_views, num_steps, c, h, w = video.shape
             video = video.view(-1, num_steps, c, h, w)
-            embs = model(video,skeleton=skeleton,video_masks=mask)
+            embs = model(video,skeleton=None,video_masks=mask.to(video.device))
             with torch.cuda.amp.autocast():
                 loss = algo[current_algo].compute_loss(embs,seq_len.to(embs.device),steps.to(embs.device),mask.to(embs.device),images=original_video,summary_writer=summary_writer,epoch=cur_epoch,split="train")
             total_loss += du.all_reduce([loss])[0].item() / len(testloader)
@@ -171,7 +173,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                 if cfg.MODEL.EMBEDDER_TYPE != 'conv':
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
                     with torch.cuda.amp.autocast():
-                        emb_feats = model(video,video_masks=None,skeleton=skeleton,split="eval")
+                        emb_feats = model.module(video.to(model.device),video_masks=None,skeleton=skeleton,split="eval")
                 else:
                     
                     assert video.size(1) == frame_label.size(1) == int(seq_len),print(f"video.shape: {video.shape}, frame_label.shape: {frame_label.shape}, seq_len: {seq_len}")
@@ -184,7 +186,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                     input_video = video[steps.long()]
                     input_video = input_video.unsqueeze(0)
                     with torch.cuda.amp.autocast():
-                        emb_feats = model(input_video,video_masks=None,skeleton=skeleton,split="eval")
+                        emb_feats = model.module(input_video,video_masks=None,skeleton=skeleton,split="eval")
                 
                 
                 embs.append(emb_feats[0].cpu())
@@ -199,24 +201,24 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                 video_list.append(video.squeeze(0).permute(0,2,3,1))
             dataset = {
                 "embs":embs_list,
-                "name":names_list,
-                "video":video_list,
+                "names":names_list,
+                "videos":video_list,
                 "labels":frame_labels_list,
             }
             if len(cfg.DATASETS) > 1:
                 dataset["subset_name"] = cfg.DATASETS[index]
             KD.evaluate(dataset,epoch,summary_writer,split=split)
-            # RE.evaluate(dataset,epoch,summary_writer,split=split)
+            RE.evaluate(dataset,epoch,summary_writer,split=split)
         
             ## check one same q/c pair and check an arbitrary q/c pair
-            queries = [0]
-            candidates = [1]
-            query = np.random.randint(0,len(embs_list))
-            candidate = np.random.randint(0,len(embs_list))
-            while query == candidate:
-                candidate = np.random.randint(0,len(embs_list))
-            queries.append(query)
-            candidates.append(candidate)
+            # queries = [0]
+            # candidates = [1]
+            # query = np.random.randint(0,len(embs_list))
+            # candidate = np.random.randint(0,len(embs_list))
+            # while query == candidate:
+            #     candidate = np.random.randint(0,len(embs_list))
+            # queries.append(query)
+            # candidates.append(candidate)
 
             # for query,candidate in zip(queries,candidates):
             #     video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{query}_{candidate}.mp4')
@@ -329,7 +331,7 @@ def main():
             group = "DDP",
             name=cfg.LOGDIR.split('/')[-1],
             tags=[cfg.TRAINING_ALGO.split("/")[-1],cfg.PATH_TO_DATASET],
-            dir="/home/c1l1mo/tmp/",
+            dir=f"/home/${USER}/tmp/",
             settings=wandb.Settings(_disable_stats=True),
             # id='zxbv9pzm', resume=True, ## resume run
         )
@@ -406,7 +408,8 @@ def main():
         print(traceback.format_exc())
         print(f"{e} occured, saving model before quitting.")
     finally:
-        save_checkpoint(cfg,model,optimizer,epoch)
+        if epoch != start_epoch:
+            save_checkpoint(cfg,model,optimizer,epoch)
         dist.destroy_process_group()
 
 if __name__ == '__main__':

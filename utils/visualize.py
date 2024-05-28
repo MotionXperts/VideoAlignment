@@ -70,9 +70,21 @@ def frame_tSNE(embs,output_path,use_dtw=False,labels=None,cfg=None):
     plt.figure(figsize=(8, 8))
     plt.xticks([])
     plt.yticks([])
-    colors = np.arange(len(embeddings))
-    for i,(x,y) in enumerate(embeddings):
-        plt.text(x,y,str(i),color=plt.cm.Set1(colors[i]),fontdict={'weight': 'bold', 'size': 9})
+    X1_frame_index = np.arange(len(X1))
+    X2_frame_index = np.arange(len(X2))
+    frame_index = np.concatenate((X1_frame_index,X2_frame_index),axis=0)
+    X1_length = len(X1_embedded)
+    red_color = (1,0,0,1)
+    blue_color = (0,0,1,1)
+
+    x_min, x_max = embeddings.min(0), embeddings.max(0)
+    embed_norm = (embeddings - x_min) / (x_max - x_min)  #Normalize so that it can fit in the plot, which only have 0 to 1 for both axis
+    plt.title('Red is Query, Blue is Candidate')
+    for i,(x,y) in enumerate(embed_norm):
+        if i<X1_length:
+            plt.text(x,y,frame_index[i],color=red_color,fontdict={'weight': 'bold', 'size': 9})
+        else:
+            plt.text(x,y,frame_index[i],color=blue_color,fontdict={'weight': 'bold', 'size': 9})
     plt.savefig(output_path)
     plt.close('all')    
 
@@ -92,11 +104,14 @@ def viz_tSNE(embs,output_path,use_dtw=False,query=0,labels=None,cfg=None):
     X = np.empty((0, 128))
     y = []
     frame_idx = []
+
+    nns[1] = np.unique(nns[1])
+
     for i, video_emb in zip(idx, embs):
-        for j in range(len(embs[0][query_valid_frames])):
+        for j in range(len(video_emb)):
             X = np.append(X, np.array([video_emb[nns[i][j]]]), axis=0)
             y.append(int(i))
-            frame_idx.append(j)
+            frame_idx.append(nns[i][j])
     y = np.array(y)
     frame_idx = np.array(frame_idx)
 
@@ -128,7 +143,8 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
     kendalls_embs = []
     kendalls_embs.append(query_embs)
     kendalls_embs.append(key_embs)
-    viz_tSNE(kendalls_embs,video_path.split('.mp4')[0]+('.jpg'),use_dtw=use_dtw,labels=labels,cfg=cfg)
+    viz_tSNE(kendalls_embs,video_path.split('.mp4')[0]+('_tSNE.jpg'),use_dtw=use_dtw,query=0,labels=labels,cfg=cfg)
+    # frame_tSNE(kendalls_embs,video_path.split('.mp4')[0]+('.jpg'),use_dtw=use_dtw,labels=labels,cfg=cfg)
     
 
     plt.figure(figsize=(5,1))

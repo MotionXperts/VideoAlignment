@@ -34,10 +34,10 @@ class CARL(nn.Module):
         self.encoder = Encoder(cfg,256,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,0.1,test=test)
         if self.cfg.MODEL.PROJECTION:
             self.projection = nn.Sequential(
-                nn.Linear(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE),
-                nn.BatchNorm1d(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE),
+                nn.Linear(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,cfg.MODEL.PROJECTION_HIDDEN_SIZE),
+                nn.BatchNorm1d(cfg.MODEL.PROJECTION_HIDDEN_SIZE),
                 nn.ReLU(True),
-                nn.Linear(cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE)
+                nn.Linear(cfg.MODEL.PROJECTION_HIDDEN_SIZE,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE)
             )
             if test : 
                 for name,parameter in self.projection.named_parameters():
@@ -55,9 +55,9 @@ class CARL(nn.Module):
         x = self.transformation(x,B,T)
         x = self.encoder(x,video_masks)
         if self.cfg.MODEL.PROJECTION and split == "train":
-            x = x.view(-1,128)
+            x = x.view(-1,self.cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE)
             x = self.projection(x)
-            x = x.view(B,T,128)
+            x = x.view(B,T,self.cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE)
             x = F.normalize(x, dim=-1)
         elif self.cfg.MODEL.L2_NORMALIZE:
             x = F.normalize(x, dim=-1)

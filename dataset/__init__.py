@@ -2,7 +2,6 @@ from dataset.skating import Skating
 from dataset.pouring import Pouring
 from dataset.penn_action import PennAction,ActionBatchSampler
 import torch
-from icecream import ic
 
 def construct_dataloader(cfg,split,algo=None,force_test=False):
     
