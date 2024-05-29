@@ -6,6 +6,7 @@ from .conv.conv import Conv
 from .carl_transformer.transformer import TransformerModel as CARL_Transformer
 from icecream import ic
 from utils import dist as du
+import torch.distributed as dist
 
 def save_checkpoint(cfg, model, optimizer, epoch):
     path = os.path.join(cfg.LOGDIR, "checkpoints")
@@ -32,7 +33,7 @@ def load_checkpoint(cfg,model,optimizer,name=None):
                 checkpoint_path = name
             else:
                 checkpoint_path = natsorted(checkpoints)[-1]
-            checkpoint = torch.load(os.path.join(checkpoint_dir,checkpoint_path))
+            checkpoint = torch.load(os.path.join(checkpoint_dir,checkpoint_path),map_location=model.device)
             model.module.load_state_dict(checkpoint["model_state"])
             if optimizer is not None:
                 optimizer.load_state_dict(checkpoint["optimizer_state"])

@@ -13,7 +13,6 @@ from icecream import ic
 logger = logging.getLogger(__name__)
 
 from dataset.data_augment import create_data_augment, create_ssl_data_augment
-import utils.dist as du
 import sys
 from copy import deepcopy
 
@@ -53,17 +52,9 @@ class PennAction(torch.utils.data.Dataset):
         if dataset_name is not None:
             indices = self.action_to_indices[PENN_ACTION_LIST.index(dataset_name)]
             self.dataset = [self.dataset[index] for index in indices]
-            if du.is_root_proc():
-                logger.info(f"{len(self.dataset)} {self.split} samples of {dataset_name} dataset have been read.")
-        else:
-            if du.is_root_proc():
-                logger.info(f"{len(self.dataset)} {self.split} samples of Penn Action dataset have been read.")
         if not self.sample_all:
             seq_lens = [data['seq_len'] for data in self.dataset]
             hist, bins = np.histogram(seq_lens, bins='auto')
-            # if du.is_root_proc():
-            #     print(list(bins.astype(np.int)))
-            #     print(list(hist))
 
         self.num_frames = cfg.TRAIN.NUM_FRAMES
         # Perform data-augmentation

@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F
 from torchvision.io import read_video
 import numpy as np
-import utils.dist as du
 import json
 from icecream import ic
 import time
@@ -51,9 +50,6 @@ class Skating(torch.utils.data.Dataset):
             # logger.info(f"{len(self.dataset)} {self.split} samples of Pouring dataset have been read.")
             seq_lens = [data['seq_len'] for data in self.dataset]
             hist, bins = np.histogram(seq_lens, bins='auto')
-            if du.is_root_proc():
-                logger.info(list(bins.astype(np.int)))
-                logger.info(list(hist))
 
         if self.mode=="train" and cfg.TRAINING_ALGO == 'classification':
             num_train = max(1, int(cfg.DATA.FRACTION * len(self.dataset)))

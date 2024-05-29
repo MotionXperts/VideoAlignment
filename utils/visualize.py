@@ -105,10 +105,10 @@ def viz_tSNE(embs,output_path,use_dtw=False,query=0,labels=None,cfg=None):
     y = []
     frame_idx = []
 
-    nns[1] = np.unique(nns[1])
+    nns[1] = np.unique(nns[1]) ## * because we set np.unique here, the max length of nns[1] will be the same as nns[0] (0,0,0,1,2,3 -> 0,1,2,3)
 
     for i, video_emb in zip(idx, embs):
-        for j in range(len(video_emb)):
+        for j in range(len(nns[i])): ## so we can only iterate to the max of nns[i]
             X = np.append(X, np.array([video_emb[nns[i][j]]]), axis=0)
             y.append(int(i))
             frame_idx.append(nns[i][j])

@@ -45,7 +45,6 @@ def construct_dataloader(cfg,split,algo=None,force_test=False):
     return dataloader,train_sampler, eval_dataloader
 
 import unittest
-from utils.config import get_cfg
 import os,sys
 import torch.distributed as dist
 
