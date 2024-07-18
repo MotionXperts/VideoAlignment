@@ -128,10 +128,10 @@ class TCC():
             for j in range((batch_size)):
                 if i ==j:
                     continue
-                if i==0 and j==1:
-                    DEBUG = True
-                else:
-                    DEBUG = False
+                # if i==0 and j==1:
+                #     DEBUG = True
+                # else:
+                #     DEBUG = False
                 logits,labels = self.compute_cycle_loss(embs[i],embs[j],DEBUG=DEBUG,images=images,summary_writer=summary_writer,epoch=epoch,split=split)
                 logits_list.append(logits)
                 labels_list.append(labels)

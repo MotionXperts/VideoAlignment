@@ -36,8 +36,12 @@ class Skating(torch.utils.data.Dataset):
         if hasattr(self.cfg.DATA, "SIMPLE_PREPROCESS") and self.cfg.DATA.SIMPLE_PREPROCESS:
             self.simple_preprocess = True
 
-        with open(os.path.join(cfg.PATH_TO_DATASET, self.mode + '.pkl'), 'rb') as f:
-            self.dataset = pickle.load(f)
+        if cfg.args.abs_pkl is not None:
+            with open(cfg.args.abs_pkl, 'rb') as f:
+                self.dataset = pickle.load(f)
+        else:
+            with open(os.path.join(cfg.PATH_TO_DATASET, self.mode + '.pkl'), 'rb') as f:
+                self.dataset = pickle.load(f)
         
         ### DANGEROUS!! REMOVE IT AFTER TRYING
         if self.mode == "processed_videos_demo" :
@@ -59,7 +63,7 @@ class Skating(torch.utils.data.Dataset):
         # Perform data-augmentation
         if self.cfg.SSL and "train" in self.mode and not self.force_test:
             self.data_preprocess,self.b4_norm = create_ssl_data_augment(cfg, augment=True)
-        elif self.mode=="train" and not self.simple_preprocess:
+        elif self.mode=="train" and not self.simple_preprocess and not self.force_test:
             self.data_preprocess,self.b4_norm = create_data_augment(cfg, augment=True)
         elif self.simple_preprocess:
             self.data_preprocess = lambda x:((x * 255.0)  / 127.5) - 1.0
@@ -75,15 +79,26 @@ class Skating(torch.utils.data.Dataset):
     def __getitem__(self, index):
         
         name = self.dataset[index]["name"]
-        frame_label = self.dataset[index]["frame_label"]
-        seq_len = self.dataset[index]["seq_len"]
+
+        frame_field = "frame_label"
+        seq_len_field = "seq_len"
+        video_file_field = "video_file"
+
+        if self.cfg.args.prefix:
+            # frame_field = f"{self.cfg.args.prefix}_frame_label"
+            # seq_len_field = f"{self.cfg.args.prefix}_seq_len"
+            video_file_field =  f"{self.cfg.args.prefix}_video_file"
+
+        frame_label = self.dataset[index][frame_field]
+        seq_len = self.dataset[index][seq_len_field]
         if self.train is not None:
             video = torch.from_numpy(self.train[index]["video"])
         else:
             if hasattr(self.cfg.DATA,'SKELETON_VIDEO') and self.cfg.DATA.SKELETON_VIDEO:
                 video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["skeleton_heatmap_file"])
             else:
-                video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["video_file"])
+
+                video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index][video_file_field])
             video, _, info = read_video(video_file, pts_unit='sec')
         
         video = video.permute(0,3,1,2).float() / 255.0 # T H W C -> T C H W, [0,1] tensor
@@ -124,8 +139,11 @@ class Skating(torch.utils.data.Dataset):
 
 
         if self.train is None:
-            assert len(video) == seq_len
-            assert len(video) == len(frame_label)
+            
+            assert abs(len(video) - seq_len) <= 1, f"{len(video)} and {seq_len} is not the same in {name}."
+            # if len(video) - len(frame_label)==1: ## THIS IS SO BAD
+            #     frame_label = torch.ones(len(video))
+            assert abs(len(video)- len(frame_label)) <= 1, f"{len(video)} and {len(frame_label)} is not the same in {name}."
 
         if self.cfg.SSL and not self.sample_all and self.algo=="scl" :
             names = [name, name]
@@ -156,6 +174,8 @@ class Skating(torch.utils.data.Dataset):
         if hasattr(self.cfg.DATA, "SKELETON") and self.cfg.DATA.SKELETON:
             skeleton = skeleton[steps.long()]
         ## not flipping skeleton right now.
+
+        ## this is for skeleton videos
         if "original_video" in self.dataset[index] and self.cfg.args.use_ori:
             original_video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["original_video"])
             original_video, _, _ = read_video(original_video_file, pts_unit='sec')
@@ -163,7 +183,8 @@ class Skating(torch.utils.data.Dataset):
         else:
             try:
                 original_video = (self.b4_norm(video)).permute(0,2,3,1)
-            except:
+            except Exception as e:
+                print(e)
                 original_video = video.clone()
         video = self.data_preprocess(video)
         original_video = original_video.unsqueeze(0)

@@ -36,7 +36,7 @@ class Conv(nn.Module):
             nn.ReLU(True),
         )
         self.embedding_layer = nn.Linear(256,embed_size)
-    def forward(self,x,video_mask=None,skeleton=None,split=""):
+    def forward(self,x,video_masks=None,skeleton=None,split=""):
         B , T , C , H , W = x.shape
         x = self.encoder(x)
         x = self.dropout(x)

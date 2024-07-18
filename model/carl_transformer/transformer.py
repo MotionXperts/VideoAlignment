@@ -387,10 +387,16 @@ class TransformerModel(nn.Module):
             self.backbone.eval()
             with torch.no_grad():
                 curr_emb = self.backbone(curr_data)
+            # Detach and require gradients for the backbone output
+            curr_emb = curr_emb.detach().requires_grad_()
+
             curr_emb = self.res_finetune(curr_emb)
             _, out_c, out_h, out_w = curr_emb.size()
             curr_emb = curr_emb.contiguous().view(batch_size, cur_steps, out_c, out_h, out_w)
             backbone_out.append(curr_emb)
+
+        backbone_output = torch.cat(backbone_out, dim=1)
+
         x = torch.cat(backbone_out, dim=1)
         x_res,x_reshape,x_pooling,x_flatten,x_fc,x_emb,x_transform,x_pos,x_encoding_layer,x_encoder = self.embed(x, video_maskss=video_masks)
         if self.test:
@@ -419,7 +425,7 @@ class TransformerModel(nn.Module):
             mine_result = self.mine(ori_x,split=split)
             ic(torch.equal(mine_encoder_result,mine_result))
             ic(x,mine_result)
-        return x
+        return x, curr_emb
         return {"x_res":x_res,
                 "x_reshape":x_reshape,
                 "x_pooling":x_pooling,

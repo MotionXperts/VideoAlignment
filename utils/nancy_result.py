@@ -1,11 +1,9 @@
-import datetime
+from .visualize import viz_tSNE
 from dtw import *
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import os
 import torch
 import numpy as np
-from icecream import ic
 
 
 def unnorm(query_frame):
@@ -14,79 +12,84 @@ def unnorm(query_frame):
   query_frame = (query_frame - min_v) / (max_v - min_v)
   return query_frame
 
-
-
-def align_by_start(cfg,video_name,dataset,query,candidate):
-    ## in this case, load 2 video and compare their min distance to the standard embedding
-    # std_loader, std_eval_loader = construct_dataloader(cfg, 'standard')
-
-    embs_list = dataset["embs"]
-    video_list = dataset["videos"]
-    names_list = dataset["names"]
-
-
-    assert 'standard' in names_list[-1],ic(names_list[-1])
-    std_emb = embs_list[-1] ## the standard_0 locates at the end of the "Skating" dataset.
+def optimized_distance_finder(self_subtraction_matrix,embs,query_embs):
+    """
+    Credit to Jason :D
+    Algorithm: 
+        A : [a0, a1, a2, a3, a4 ... ... an]
+        B : [b0, b1, b2, b3, b4 ... bm] (n > m)
+        Compute distance B and sliding window(A)
+        np.sum([a0-b0, a1-b1, a2-b2, a3-b3, a4-b4 ... am-bm]) -> dist0
+        np.sum([a1-b0, a2-b1, a3-b2, a4-b3, a5-b4 ... a(m+1)-bm]) -> dist1
+        np.sum([a2-b0, a3-b1, a4-b2, a5-b3, a6-b4 ... a(m+2)-bm]) -> dist2
+        ...
+        a1-b0 is equal to a1-a0 + a0-b0, a2-b1 is equal to a2-a1 + a1-b1, a3-b2 is equal to a3-a2 + a2-b2 ...
+        Similarly, 
+        a2-b0 is equal to a2-a0 + a0-b0, a3-b1 is equal to a3-a1 + a1-b1, a4-b2 is equal to a4-a2 + a2-b2 ...
+    So we only need to compute dist0 and a(0~m) - a(0~m)
+    Note: This cannot work on l2 distance because square is incoporated, so we use abs to calcualate distances
+    """
+    ### Compute dist0
+    n = self_subtraction_matrix.size(0)
+    m = len(query_embs)
     
-
-    def dist_fn(x, y):
-      dist = np.sum((x-y)**2)
-      return dist
-
-    def get_start_frame(CONFIG, emb, emb_name, standard_emb):
-        min_dists = []
-        naive_distances = []
-        print(len(emb), len(standard_emb))
-        if len(emb) < len(standard_emb): ## pad the emb so that it can at least match with the first frame
-            for i in range(len(standard_emb)-len(emb)+1):
-                emb=  np.vstack((emb,(emb[-1])))
-
-        for i in range(len(emb)-len(standard_emb)): ## * use sliding window
-            query_embs = emb[i:i+len(standard_emb)]   ## * compare in which window
-            min_dist, cost_matrix, acc_cost_matrix, path = dtw(query_embs, standard_emb, dist=dist_fn) ## * the dtw yields
-            min_dists.append(min_dist)
-            ## get distance in interval as well
-            naive_distance = np.sum(np.array([np.sum((query_embs[j]-standard_emb[j])**2) for j in range(len(query_embs))]))
-            naive_distances.append(naive_distance)
-
-
-        if len(emb) == len(standard_emb):
-          start_frame = 0
-          naive_start_frame = 0
-        else:
-          start_frame = min_dists.index(min(min_dists)) ## * the smallest value (set it as start frame)
-          naive_start_frame = naive_distances.index(min(naive_distances)) ## * the smallest value (set it as start frame)
-        print(f"naive distances: " , naive_distances)
-        print(f"min_dists: " , min_dists)
-        print(f"naive_start_frame: " , naive_start_frame)
-        print(f"start_frame: " , start_frame)
-
-        # Plot min_dist calculation
-        os.makedirs(os.path.join(CONFIG.LOGDIR,'NC_align'),exist_ok = True)
-        x = np.arange(0, len(emb)-len(standard_emb))
-        plt.plot(x, min_dists, '-ro', markevery=[start_frame])
-        plt.savefig(os.path.join(CONFIG.LOGDIR,'NC_align' , f'min_dists_{emb_name}_dtw'))
-        plt.clf()
-
-        x = np.arange(0, len(emb)-len(standard_emb))
-        plt.plot(x, naive_distances, '-ro', markevery=[naive_start_frame])
-        plt.savefig(os.path.join(CONFIG.LOGDIR,'NC_align' , f'min_dists_{emb_name}_naive'))
-        plt.clf()
-
-        return start_frame
+    ## dist.shape = m x query_embs.size(-1)
+    dist0 = embs[:m] - query_embs ## dont do abs and sum here because we need the signed value to do algorithm
     
-    
-    query_start_frame = get_start_frame(cfg, embs_list[query], names_list[query], std_emb)
-    candidate_start_frame = get_start_frame(cfg, std_emb, names_list[candidate], embs_list[candidate])
+    distances = [torch.sum((dist0)**2)]
+    for i in range(1, n-m+1):
+        ## index diagonallly in self_subtraction_matrix
+        distances.append(torch.sum((dist0 + (torch.diagonal(self_subtraction_matrix,i).transpose(0,1)[:m]) )**2))
 
-    start_frame = [query_start_frame, candidate_start_frame]
-    # frames = [video_list[query][query_start_frame:query_start_frame+len(std_emb)], video_list[candidate][candidate_start_frame:candidate_start_frame+len(std_emb)]]
-    frames = [video_list[query][candidate_start_frame:candidate_start_frame+len(video_list[candidate])],video_list[candidate]]
-    query,candidate = 0,1
+    min_distance = torch.argmin(torch.stack(distances))
+    x = np.arange(0, n-m+1)
+    plt.plot(x, distances, '-ro', markevery=[min_distance])
+    plt.savefig('a_min_dist.png')
+    plt.clf()
+    return min_distance
 
-    gen_result(start_frame,frames, video_name,query,candidate)
+def align(query_embs,key_embs,name) -> (int):
+    """
+    Compute which time window of key_embs is most similar to the query_embs(user's input)
+    inputs:
+    @ query_embs: Tu , 512
+    @ key_embs: Ts , 512
+    """    
+    tmp = key_embs.expand(key_embs.size(0),key_embs.size(0),-1)
+    self_subtraction_matrix = (tmp - tmp.transpose(0,1))
+    """
+          a0    a1   a2  a3     a4 ...
+    a0  a0-a0 a1-a0 a2-a0 a3-a0 a4-a0
+    a1  a0-a1 a1-a1 a2-a1 a3-a1 a4-a1
+    a2  a0-a2 a1-a2 a2-a2 a3-a2 a4-a2
+    a3  a0-a3 a1-a3 a2-a3 a3-a3 a4-a3
+    a4  a0-a4 a1-a4 a2-a4 a3-a4 a4-a4
+    ...
+    """
 
-def gen_result(start_frames, frames,output_name,query,candi ):
+    if len(key_embs) < len(query_embs): 
+        return 0
+    opt_start_frame = optimized_distance_finder(self_subtraction_matrix,key_embs,query_embs)
+    print('opt start frame : ',opt_start_frame)
+    return opt_start_frame
+
+def align_by_start(query_embs,query_frames,key_embs,key_frames,output_name,tsNE_only=False):
+
+    ## the longer will be key, shorter will be query
+    if len(query_embs) > len(key_embs):
+      key_embs,query_embs = query_embs,key_embs
+      key_frames,query_frames = query_frames,key_frames
+    start_frame = align(torch.from_numpy(query_embs),torch.from_numpy(key_embs),None)
+    start_frames = [0,start_frame]
+    frames = [query_frames,key_frames[start_frame:start_frame+len(query_frames)]]
+    # embs = [query_embs,key_embs[start_frame:start_frame+len(query_embs)]] ## why do this? i forget
+    embs = [key_embs,query_embs]
+    viz_tSNE(embs,output_name.replace('.mp4','.png'))
+    if tsNE_only:
+      return
+    gen_result(start_frames,frames,output_name)
+
+def gen_result(start_frames, frames,output_name):
   # Create subplots
   nrows = len(frames)
   fig, ax = plt.subplots(ncols=nrows,figsize=(10, 10),tight_layout=True)
@@ -100,46 +103,13 @@ def gen_result(start_frames, frames,output_name,query,candi ):
       ax[k].set_yticks([])
     return ims
   
-  num_total_frames = min([len(frames[query]), len(frames[candi])])
+  num_total_frames = min([len(frames[0]), len(frames[1])])
   def update(i):
-    ims[0].set_data(unnorm(frames[query][i]))
-    ax[0].set_title('START {} '.format(start_frames[query]), fontsize = 14)
-    ims[1].set_data(unnorm(frames[candi][i]))
-    ax[1].set_title('START {}'.format(start_frames[candi]), fontsize = 14)
+    ims[0].set_data(unnorm(frames[0][i]))
+    ax[0].set_title('START {} '.format(start_frames[0]), fontsize = 14)
+    ims[1].set_data(unnorm(frames[1][i]))
+    ax[1].set_title('START {}'.format(start_frames[1]), fontsize = 14)
       
-
-  # # The one with larger start_frame needs to be played first
-  # first = query if (start_frames[query] > start_frames[candi]) else candi
-  # second = candi if (first==query) else query
-
-
-  # # The second video starts playing at start_frame
-  # start_frame = start_frames[first] - start_frames[second]
-  # if (start_frames[first] + len(frames[second])) > len(frames[first]):
-  #   num_total_frames = start_frames[first] + len(frames[second])
-  # else:
-  #   num_total_frames = len(frames[first])
-
-  # def update(i):
-  #   if i % 10 == 0:
-  #     print(f'{i}/{num_total_frames}')
-
-  #   if i < len(frames[first]):
-  #     ims[first].set_data(unnorm(frames[first][i]))
-  #   else:
-  #     ims[first].set_data(unnorm(frames[first][-1]))
-  #   ax[first].set_title('START {} '.format(start_frames[first]), fontsize = 14)
-  #   ax[second].set_title('START {}'.format(start_frames[second]), fontsize = 14)
-
-  #   if i >= start_frame and i < (start_frame+len(frames[second])):
-  #     ims[second].set_data(unnorm(frames[second][i-start_frame]))
-  #   elif i < start_frame:
-  #     ims[second].set_data(unnorm(frames[second][0]))
-  #   else:
-  #     ims[second].set_data(unnorm(frames[second][-1]))
-  #   plt.tight_layout()
-  #   return ims
-
 
   # Create animation
   anim = FuncAnimation(

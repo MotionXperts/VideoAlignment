@@ -58,44 +58,21 @@ def dist_fn(x, y):
     dist = np.sum((x-y)**2)
     return dist
 
-def frame_tSNE(embs,output_path,use_dtw=False,labels=None,cfg=None):
-    X1 = embs[0]
-    X2 = embs[1]
-    tsne = manifold.TSNE(n_components=2, init='random', random_state=5, verbose=0)
-
-    X1_embedded = tsne.fit_transform(X1.reshape(-1,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE))
-    X2_embedded = tsne.fit_transform(X2.reshape(-1,cfg.MODEL.EMBEDDER_MODEL.EMBEDDING_SIZE))
-
-    embeddings = np.concatenate((X1_embedded,X2_embedded),axis=0)
-    plt.figure(figsize=(8, 8))
-    plt.xticks([])
-    plt.yticks([])
-    X1_frame_index = np.arange(len(X1))
-    X2_frame_index = np.arange(len(X2))
-    frame_index = np.concatenate((X1_frame_index,X2_frame_index),axis=0)
-    X1_length = len(X1_embedded)
-    red_color = (1,0,0,1)
-    blue_color = (0,0,1,1)
-
-    x_min, x_max = embeddings.min(0), embeddings.max(0)
-    embed_norm = (embeddings - x_min) / (x_max - x_min)  #Normalize so that it can fit in the plot, which only have 0 to 1 for both axis
-    plt.title('Red is Query, Blue is Candidate')
-    for i,(x,y) in enumerate(embed_norm):
-        if i<X1_length:
-            plt.text(x,y,frame_index[i],color=red_color,fontdict={'weight': 'bold', 'size': 9})
-        else:
-            plt.text(x,y,frame_index[i],color=blue_color,fontdict={'weight': 'bold', 'size': 9})
-    plt.savefig(output_path)
-    plt.close('all')    
-
-def viz_tSNE(embs,output_path,use_dtw=False,query=0,labels=None,cfg=None):
+def viz_tSNE(embs,output_path,use_dtw=True,query=0,labels=None,cfg=None,start_frame=0):
+    print(embs[0].shape,embs[1].shape)
     nns = []
     distances = []
     idx = np.arange(len(embs))
-    query_valid_frames = np.where(labels[query]>=cfg.EVAL.KENDALLS_TAU_COMPUTE_LABELS)[0]
+    if labels is not None:
+        query_valid_frames = np.where(labels[query]>=cfg.EVAL.KENDALLS_TAU_COMPUTE_LABELS)[0]
+    else:
+        query_valid_frames = np.arange(len(embs[query]))
     for candidate in range(len(embs)):
         idx[candidate] = candidate
-        candidates_valid_frames = np.where(labels[candidate]>=cfg.EVAL.KENDALLS_TAU_COMPUTE_LABELS)[0]
+        if labels is not None:
+            candidates_valid_frames = np.where(labels[candidate]>=cfg.EVAL.KENDALLS_TAU_COMPUTE_LABELS)[0]
+        else:
+            candidates_valid_frames = np.arange(len(embs[candidate]))
         nn = align(embs[query][query_valid_frames], embs[candidate][candidates_valid_frames], use_dtw)
         nns.append(nn)
         dis = cdist(embs[query][query_valid_frames], embs[candidate][candidates_valid_frames][nn], dist_fn)
@@ -126,6 +103,14 @@ def viz_tSNE(embs,output_path,use_dtw=False,query=0,labels=None,cfg=None):
     for i in range(X_norm.shape[0]):
         plt.text(X_norm[i, 0], X_norm[i, 1], str(frame_idx[i]), color=plt.cm.Set1(y[i]), 
                 fontdict={'weight': 'bold', 'size': 9})
+
+        # if (i < embs[0].shape[0] and (i > embs[1].shape[0]+start_frame or i < start_frame)):
+        ##  if False:
+        #     # draw gray circles
+        #     circle = plt.Circle((X_norm[i, 0], X_norm[i, 1]), radius=0.01, color='gray', fill=True)
+        # else:
+        #     circle = plt.Circle((X_norm[i, 0], X_norm[i, 1]), radius=0.01, color=plt.cm.Set1(y[i]), fill=True)
+        # plt.gca().add_patch(circle)
 
     plt.xticks([])
     plt.yticks([])
@@ -284,6 +269,37 @@ def create_single_video(frames, labels, video_path, interval=50, time_stride=1, 
             blit=False)
         anim.save(video_path, dpi=80)
 
+def create_simple_video(frames,video_path):
+    fig, ax = plt.subplots(ncols=1, figsize=(10, 10), tight_layout=True)
+    image = ax.imshow(unnorm(frames[0]))
+    def init():
+        """Initialize the plot for animation."""
+        ax.grid(False)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return image
+
+    def update(i):
+        """Update plot with next frame."""
+        image.set_data(unnorm(frames[i]))
+        # Hide grid lines
+        ax.grid(False)
+
+        # Hide axes ticks
+        ax.set_xticks([])
+        ax.set_yticks([])
+        plt.tight_layout()
+        return image
+    
+    anim = FuncAnimation(
+        fig,
+        update,
+        init_func=init,
+        frames=np.arange(len(frames)),
+        interval=50,
+        blit=False)
+    anim.save(video_path, dpi=80)
+    plt.show()
 
 def visualize(args, cfg):
     """Visualize alignment."""

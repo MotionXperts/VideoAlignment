@@ -1,0 +1,1273 @@
+CONFIG FILE: /home/c1l1mo/projects/VideoAlignment/result/scl_skating_long_50/config.yaml EXISTS? True
+Using config from /home/c1l1mo/projects/VideoAlignment/result/scl_skating_long_50/config.yaml.
+BUILDING TRANSFORMER
+Input shape: torch.Size([1, 10, 3, 224, 224])
+Output shape: torch.Size([1, 10, 128])
+Target value: -0.12385597079992294
+Intermediate output 0 shape: torch.Size([10, 64, 112, 112])
+Intermediate output 0 requires_grad: True
+Intermediate output 0 is_leaf: True
+Intermediate output 1 shape: torch.Size([10, 64, 112, 112])
+Intermediate output 1 requires_grad: True
+Intermediate output 1 is_leaf: True
+Intermediate output 2 shape: torch.Size([10, 64, 112, 112])
+Intermediate output 2 requires_grad: True
+Intermediate output 2 is_leaf: True
+Intermediate output 3 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 3 requires_grad: True
+Intermediate output 3 is_leaf: True
+Intermediate output 4 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 4 requires_grad: True
+Intermediate output 4 is_leaf: True
+Intermediate output 5 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 5 requires_grad: True
+Intermediate output 5 is_leaf: True
+Intermediate output 6 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 6 requires_grad: True
+Intermediate output 6 is_leaf: True
+Intermediate output 7 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 7 requires_grad: True
+Intermediate output 7 is_leaf: True
+Intermediate output 8 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 8 requires_grad: True
+Intermediate output 8 is_leaf: True
+Intermediate output 9 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 9 requires_grad: True
+Intermediate output 9 is_leaf: True
+Intermediate output 10 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 10 requires_grad: True
+Intermediate output 10 is_leaf: True
+Intermediate output 11 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 11 requires_grad: True
+Intermediate output 11 is_leaf: True
+Intermediate output 12 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 12 requires_grad: True
+Intermediate output 12 is_leaf: True
+Intermediate output 13 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 13 requires_grad: True
+Intermediate output 13 is_leaf: True
+Intermediate output 14 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 14 requires_grad: True
+Intermediate output 14 is_leaf: True
+Intermediate output 15 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 15 requires_grad: True
+Intermediate output 15 is_leaf: True
+Intermediate output 16 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 16 requires_grad: True
+Intermediate output 16 is_leaf: True
+Intermediate output 17 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 17 requires_grad: True
+Intermediate output 17 is_leaf: True
+Intermediate output 18 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 18 requires_grad: True
+Intermediate output 18 is_leaf: True
+Intermediate output 19 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 19 requires_grad: True
+Intermediate output 19 is_leaf: True
+Intermediate output 20 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 20 requires_grad: True
+Intermediate output 20 is_leaf: True
+Intermediate output 21 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 21 requires_grad: True
+Intermediate output 21 is_leaf: True
+Intermediate output 22 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 22 requires_grad: True
+Intermediate output 22 is_leaf: True
+Intermediate output 23 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 23 requires_grad: True
+Intermediate output 23 is_leaf: True
+Intermediate output 24 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 24 requires_grad: True
+Intermediate output 24 is_leaf: True
+Intermediate output 25 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 25 requires_grad: True
+Intermediate output 25 is_leaf: True
+Intermediate output 26 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 26 requires_grad: True
+Intermediate output 26 is_leaf: True
+Intermediate output 27 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 27 requires_grad: True
+Intermediate output 27 is_leaf: True
+Intermediate output 28 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 28 requires_grad: True
+Intermediate output 28 is_leaf: True
+Intermediate output 29 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 29 requires_grad: True
+Intermediate output 29 is_leaf: True
+Intermediate output 30 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 30 requires_grad: True
+Intermediate output 30 is_leaf: True
+Intermediate output 31 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 31 requires_grad: True
+Intermediate output 31 is_leaf: True
+Intermediate output 32 shape: torch.Size([10, 64, 56, 56])
+Intermediate output 32 requires_grad: True
+Intermediate output 32 is_leaf: True
+Intermediate output 33 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 33 requires_grad: True
+Intermediate output 33 is_leaf: True
+Intermediate output 34 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 34 requires_grad: True
+Intermediate output 34 is_leaf: True
+Intermediate output 35 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 35 requires_grad: True
+Intermediate output 35 is_leaf: True
+Intermediate output 36 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 36 requires_grad: True
+Intermediate output 36 is_leaf: True
+Intermediate output 37 shape: torch.Size([10, 256, 56, 56])
+Intermediate output 37 requires_grad: True
+Intermediate output 37 is_leaf: True
+Intermediate output 38 shape: torch.Size([10, 128, 56, 56])
+Intermediate output 38 requires_grad: True
+Intermediate output 38 is_leaf: True
+Intermediate output 39 shape: torch.Size([10, 128, 56, 56])
+Intermediate output 39 requires_grad: True
+Intermediate output 39 is_leaf: True
+Intermediate output 40 shape: torch.Size([10, 128, 56, 56])
+Intermediate output 40 requires_grad: True
+Intermediate output 40 is_leaf: True
+Intermediate output 41 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 41 requires_grad: True
+Intermediate output 41 is_leaf: True
+Intermediate output 42 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 42 requires_grad: True
+Intermediate output 42 is_leaf: True
+Intermediate output 43 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 43 requires_grad: True
+Intermediate output 43 is_leaf: True
+Intermediate output 44 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 44 requires_grad: True
+Intermediate output 44 is_leaf: True
+Intermediate output 45 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 45 requires_grad: True
+Intermediate output 45 is_leaf: True
+Intermediate output 46 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 46 requires_grad: True
+Intermediate output 46 is_leaf: True
+Intermediate output 47 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 47 requires_grad: True
+Intermediate output 47 is_leaf: True
+Intermediate output 48 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 48 requires_grad: True
+Intermediate output 48 is_leaf: True
+Intermediate output 49 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 49 requires_grad: True
+Intermediate output 49 is_leaf: True
+Intermediate output 50 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 50 requires_grad: True
+Intermediate output 50 is_leaf: True
+Intermediate output 51 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 51 requires_grad: True
+Intermediate output 51 is_leaf: True
+Intermediate output 52 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 52 requires_grad: True
+Intermediate output 52 is_leaf: True
+Intermediate output 53 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 53 requires_grad: True
+Intermediate output 53 is_leaf: True
+Intermediate output 54 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 54 requires_grad: True
+Intermediate output 54 is_leaf: True
+Intermediate output 55 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 55 requires_grad: True
+Intermediate output 55 is_leaf: True
+Intermediate output 56 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 56 requires_grad: True
+Intermediate output 56 is_leaf: True
+Intermediate output 57 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 57 requires_grad: True
+Intermediate output 57 is_leaf: True
+Intermediate output 58 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 58 requires_grad: True
+Intermediate output 58 is_leaf: True
+Intermediate output 59 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 59 requires_grad: True
+Intermediate output 59 is_leaf: True
+Intermediate output 60 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 60 requires_grad: True
+Intermediate output 60 is_leaf: True
+Intermediate output 61 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 61 requires_grad: True
+Intermediate output 61 is_leaf: True
+Intermediate output 62 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 62 requires_grad: True
+Intermediate output 62 is_leaf: True
+Intermediate output 63 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 63 requires_grad: True
+Intermediate output 63 is_leaf: True
+Intermediate output 64 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 64 requires_grad: True
+Intermediate output 64 is_leaf: True
+Intermediate output 65 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 65 requires_grad: True
+Intermediate output 65 is_leaf: True
+Intermediate output 66 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 66 requires_grad: True
+Intermediate output 66 is_leaf: True
+Intermediate output 67 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 67 requires_grad: True
+Intermediate output 67 is_leaf: True
+Intermediate output 68 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 68 requires_grad: True
+Intermediate output 68 is_leaf: True
+Intermediate output 69 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 69 requires_grad: True
+Intermediate output 69 is_leaf: True
+Intermediate output 70 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 70 requires_grad: True
+Intermediate output 70 is_leaf: True
+Intermediate output 71 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 71 requires_grad: True
+Intermediate output 71 is_leaf: True
+Intermediate output 72 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 72 requires_grad: True
+Intermediate output 72 is_leaf: True
+Intermediate output 73 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 73 requires_grad: True
+Intermediate output 73 is_leaf: True
+Intermediate output 74 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 74 requires_grad: True
+Intermediate output 74 is_leaf: True
+Intermediate output 75 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 75 requires_grad: True
+Intermediate output 75 is_leaf: True
+Intermediate output 76 shape: torch.Size([10, 128, 28, 28])
+Intermediate output 76 requires_grad: True
+Intermediate output 76 is_leaf: True
+Intermediate output 77 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 77 requires_grad: True
+Intermediate output 77 is_leaf: True
+Intermediate output 78 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 78 requires_grad: True
+Intermediate output 78 is_leaf: True
+Intermediate output 79 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 79 requires_grad: True
+Intermediate output 79 is_leaf: True
+Intermediate output 80 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 80 requires_grad: True
+Intermediate output 80 is_leaf: True
+Intermediate output 81 shape: torch.Size([10, 512, 28, 28])
+Intermediate output 81 requires_grad: True
+Intermediate output 81 is_leaf: True
+Intermediate output 82 shape: torch.Size([10, 256, 28, 28])
+Intermediate output 82 requires_grad: True
+Intermediate output 82 is_leaf: True
+Intermediate output 83 shape: torch.Size([10, 256, 28, 28])
+Intermediate output 83 requires_grad: True
+Intermediate output 83 is_leaf: True
+Intermediate output 84 shape: torch.Size([10, 256, 28, 28])
+Intermediate output 84 requires_grad: True
+Intermediate output 84 is_leaf: True
+Intermediate output 85 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 85 requires_grad: True
+Intermediate output 85 is_leaf: True
+Intermediate output 86 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 86 requires_grad: True
+Intermediate output 86 is_leaf: True
+Intermediate output 87 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 87 requires_grad: True
+Intermediate output 87 is_leaf: True
+Intermediate output 88 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 88 requires_grad: True
+Intermediate output 88 is_leaf: True
+Intermediate output 89 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 89 requires_grad: True
+Intermediate output 89 is_leaf: True
+Intermediate output 90 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 90 requires_grad: True
+Intermediate output 90 is_leaf: True
+Intermediate output 91 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 91 requires_grad: True
+Intermediate output 91 is_leaf: True
+Intermediate output 92 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 92 requires_grad: True
+Intermediate output 92 is_leaf: True
+Intermediate output 93 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 93 requires_grad: True
+Intermediate output 93 is_leaf: True
+Intermediate output 94 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 94 requires_grad: True
+Intermediate output 94 is_leaf: True
+Intermediate output 95 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 95 requires_grad: True
+Intermediate output 95 is_leaf: True
+Intermediate output 96 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 96 requires_grad: True
+Intermediate output 96 is_leaf: True
+Intermediate output 97 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 97 requires_grad: True
+Intermediate output 97 is_leaf: True
+Intermediate output 98 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 98 requires_grad: True
+Intermediate output 98 is_leaf: True
+Intermediate output 99 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 99 requires_grad: True
+Intermediate output 99 is_leaf: True
+Intermediate output 100 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 100 requires_grad: True
+Intermediate output 100 is_leaf: True
+Intermediate output 101 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 101 requires_grad: True
+Intermediate output 101 is_leaf: True
+Intermediate output 102 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 102 requires_grad: True
+Intermediate output 102 is_leaf: True
+Intermediate output 103 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 103 requires_grad: True
+Intermediate output 103 is_leaf: True
+Intermediate output 104 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 104 requires_grad: True
+Intermediate output 104 is_leaf: True
+Intermediate output 105 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 105 requires_grad: True
+Intermediate output 105 is_leaf: True
+Intermediate output 106 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 106 requires_grad: True
+Intermediate output 106 is_leaf: True
+Intermediate output 107 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 107 requires_grad: True
+Intermediate output 107 is_leaf: True
+Intermediate output 108 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 108 requires_grad: True
+Intermediate output 108 is_leaf: True
+Intermediate output 109 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 109 requires_grad: True
+Intermediate output 109 is_leaf: True
+Intermediate output 110 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 110 requires_grad: True
+Intermediate output 110 is_leaf: True
+Intermediate output 111 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 111 requires_grad: True
+Intermediate output 111 is_leaf: True
+Intermediate output 112 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 112 requires_grad: True
+Intermediate output 112 is_leaf: True
+Intermediate output 113 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 113 requires_grad: True
+Intermediate output 113 is_leaf: True
+Intermediate output 114 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 114 requires_grad: True
+Intermediate output 114 is_leaf: True
+Intermediate output 115 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 115 requires_grad: True
+Intermediate output 115 is_leaf: True
+Intermediate output 116 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 116 requires_grad: True
+Intermediate output 116 is_leaf: True
+Intermediate output 117 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 117 requires_grad: True
+Intermediate output 117 is_leaf: True
+Intermediate output 118 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 118 requires_grad: True
+Intermediate output 118 is_leaf: True
+Intermediate output 119 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 119 requires_grad: True
+Intermediate output 119 is_leaf: True
+Intermediate output 120 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 120 requires_grad: True
+Intermediate output 120 is_leaf: True
+Intermediate output 121 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 121 requires_grad: True
+Intermediate output 121 is_leaf: True
+Intermediate output 122 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 122 requires_grad: True
+Intermediate output 122 is_leaf: True
+Intermediate output 123 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 123 requires_grad: True
+Intermediate output 123 is_leaf: True
+Intermediate output 124 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 124 requires_grad: True
+Intermediate output 124 is_leaf: True
+Intermediate output 125 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 125 requires_grad: True
+Intermediate output 125 is_leaf: True
+Intermediate output 126 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 126 requires_grad: True
+Intermediate output 126 is_leaf: True
+Intermediate output 127 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 127 requires_grad: True
+Intermediate output 127 is_leaf: True
+Intermediate output 128 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 128 requires_grad: True
+Intermediate output 128 is_leaf: True
+Intermediate output 129 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 129 requires_grad: True
+Intermediate output 129 is_leaf: True
+Intermediate output 130 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 130 requires_grad: True
+Intermediate output 130 is_leaf: True
+Intermediate output 131 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 131 requires_grad: True
+Intermediate output 131 is_leaf: True
+Intermediate output 132 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 132 requires_grad: True
+Intermediate output 132 is_leaf: True
+Intermediate output 133 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 133 requires_grad: True
+Intermediate output 133 is_leaf: True
+Intermediate output 134 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 134 requires_grad: True
+Intermediate output 134 is_leaf: True
+Intermediate output 135 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 135 requires_grad: True
+Intermediate output 135 is_leaf: True
+Intermediate output 136 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 136 requires_grad: True
+Intermediate output 136 is_leaf: True
+Intermediate output 137 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 137 requires_grad: True
+Intermediate output 137 is_leaf: True
+Intermediate output 138 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 138 requires_grad: True
+Intermediate output 138 is_leaf: True
+Intermediate output 139 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 139 requires_grad: True
+Intermediate output 139 is_leaf: True
+Intermediate output 140 shape: torch.Size([10, 256, 14, 14])
+Intermediate output 140 requires_grad: True
+Intermediate output 140 is_leaf: True
+Intermediate output 141 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 141 requires_grad: True
+Intermediate output 141 is_leaf: True
+Intermediate output 142 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 142 requires_grad: True
+Intermediate output 142 is_leaf: True
+Intermediate output 143 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 143 requires_grad: True
+Intermediate output 143 is_leaf: True
+Intermediate output 144 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 144 requires_grad: True
+Intermediate output 144 is_leaf: True
+Intermediate output 145 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 145 requires_grad: True
+Intermediate output 145 is_leaf: True
+Intermediate output 146 shape: torch.Size([10, 1024, 14, 14])
+Intermediate output 146 requires_grad: True
+Intermediate output 146 is_leaf: True
+Intermediate output 147 shape: torch.Size([10, 512, 14, 14])
+Intermediate output 147 requires_grad: True
+Intermediate output 147 is_leaf: False
+Intermediate output 148 shape: torch.Size([10, 512, 14, 14])
+Intermediate output 148 requires_grad: True
+Intermediate output 148 is_leaf: False
+Intermediate output 149 shape: torch.Size([10, 512, 14, 14])
+Intermediate output 149 requires_grad: True
+Intermediate output 149 is_leaf: False
+Intermediate output 150 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 150 requires_grad: True
+Intermediate output 150 is_leaf: False
+Intermediate output 151 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 151 requires_grad: True
+Intermediate output 151 is_leaf: False
+Intermediate output 152 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 152 requires_grad: True
+Intermediate output 152 is_leaf: False
+Intermediate output 153 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 153 requires_grad: True
+Intermediate output 153 is_leaf: False
+Intermediate output 154 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 154 requires_grad: True
+Intermediate output 154 is_leaf: False
+Intermediate output 155 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 155 requires_grad: True
+Intermediate output 155 is_leaf: False
+Intermediate output 156 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 156 requires_grad: True
+Intermediate output 156 is_leaf: False
+Intermediate output 157 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 157 requires_grad: True
+Intermediate output 157 is_leaf: False
+Intermediate output 158 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 158 requires_grad: True
+Intermediate output 158 is_leaf: False
+Intermediate output 159 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 159 requires_grad: True
+Intermediate output 159 is_leaf: False
+Intermediate output 160 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 160 requires_grad: True
+Intermediate output 160 is_leaf: False
+Intermediate output 161 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 161 requires_grad: True
+Intermediate output 161 is_leaf: False
+Intermediate output 162 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 162 requires_grad: True
+Intermediate output 162 is_leaf: False
+Intermediate output 163 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 163 requires_grad: True
+Intermediate output 163 is_leaf: False
+Intermediate output 164 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 164 requires_grad: True
+Intermediate output 164 is_leaf: False
+Intermediate output 165 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 165 requires_grad: True
+Intermediate output 165 is_leaf: False
+Intermediate output 166 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 166 requires_grad: True
+Intermediate output 166 is_leaf: False
+Intermediate output 167 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 167 requires_grad: True
+Intermediate output 167 is_leaf: False
+Intermediate output 168 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 168 requires_grad: True
+Intermediate output 168 is_leaf: False
+Intermediate output 169 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 169 requires_grad: True
+Intermediate output 169 is_leaf: False
+Intermediate output 170 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 170 requires_grad: True
+Intermediate output 170 is_leaf: False
+Intermediate output 171 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 171 requires_grad: True
+Intermediate output 171 is_leaf: False
+Intermediate output 172 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 172 requires_grad: True
+Intermediate output 172 is_leaf: False
+Intermediate output 173 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 173 requires_grad: True
+Intermediate output 173 is_leaf: False
+Intermediate output 174 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 174 requires_grad: True
+Intermediate output 174 is_leaf: False
+Intermediate output 175 shape: torch.Size([10, 512, 7, 7])
+Intermediate output 175 requires_grad: True
+Intermediate output 175 is_leaf: False
+Intermediate output 176 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 176 requires_grad: True
+Intermediate output 176 is_leaf: False
+Intermediate output 177 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 177 requires_grad: True
+Intermediate output 177 is_leaf: False
+Intermediate output 178 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 178 requires_grad: True
+Intermediate output 178 is_leaf: False
+Intermediate output 179 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 179 requires_grad: True
+Intermediate output 179 is_leaf: False
+Intermediate output 180 shape: torch.Size([10, 2048, 7, 7])
+Intermediate output 180 requires_grad: True
+Intermediate output 180 is_leaf: False
+Intermediate output 181 shape: torch.Size([10, 2048, 1, 1])
+Intermediate output 181 requires_grad: True
+Intermediate output 181 is_leaf: False
+Intermediate output 182 shape: torch.Size([10, 2048])
+Intermediate output 182 requires_grad: True
+Intermediate output 182 is_leaf: False
+Intermediate output 183 shape: torch.Size([10, 2048])
+Intermediate output 183 requires_grad: True
+Intermediate output 183 is_leaf: False
+Intermediate output 184 shape: torch.Size([10, 512])
+Intermediate output 184 requires_grad: True
+Intermediate output 184 is_leaf: False
+Intermediate output 185 shape: torch.Size([10, 512])
+Intermediate output 185 requires_grad: True
+Intermediate output 185 is_leaf: False
+Intermediate output 186 shape: torch.Size([10, 512])
+Intermediate output 186 requires_grad: True
+Intermediate output 186 is_leaf: False
+Intermediate output 187 shape: torch.Size([10, 512])
+Intermediate output 187 requires_grad: True
+Intermediate output 187 is_leaf: False
+Intermediate output 188 shape: torch.Size([10, 512])
+Intermediate output 188 requires_grad: True
+Intermediate output 188 is_leaf: False
+Intermediate output 189 shape: torch.Size([10, 512])
+Intermediate output 189 requires_grad: True
+Intermediate output 189 is_leaf: False
+Intermediate output 190 shape: torch.Size([10, 512])
+Intermediate output 190 requires_grad: True
+Intermediate output 190 is_leaf: False
+Intermediate output 191 shape: torch.Size([10, 512])
+Intermediate output 191 requires_grad: True
+Intermediate output 191 is_leaf: False
+Intermediate output 192 shape: torch.Size([10, 256])
+Intermediate output 192 requires_grad: True
+Intermediate output 192 is_leaf: False
+Intermediate output 193 shape: torch.Size([1, 10, 256])
+Intermediate output 193 requires_grad: True
+Intermediate output 193 is_leaf: False
+Intermediate output 194 shape: torch.Size([1, 10, 256])
+Intermediate output 194 requires_grad: True
+Intermediate output 194 is_leaf: False
+Intermediate output 195 shape: torch.Size([1, 10, 256])
+Intermediate output 195 requires_grad: True
+Intermediate output 195 is_leaf: False
+Intermediate output 196 shape: torch.Size([1, 10, 256])
+Intermediate output 196 requires_grad: True
+Intermediate output 196 is_leaf: False
+Intermediate output 197 shape: torch.Size([1, 10, 256])
+Intermediate output 197 requires_grad: True
+Intermediate output 197 is_leaf: False
+Intermediate output 198 shape: torch.Size([1, 10, 256])
+Intermediate output 198 requires_grad: True
+Intermediate output 198 is_leaf: False
+Intermediate output 199 shape: torch.Size([1, 10, 256])
+Intermediate output 199 requires_grad: True
+Intermediate output 199 is_leaf: False
+Intermediate output 200 shape: torch.Size([1, 10, 8, 32])
+Intermediate output 200 requires_grad: True
+Intermediate output 200 is_leaf: False
+Intermediate output 201 shape: torch.Size([1, 10, 256])
+Intermediate output 201 requires_grad: True
+Intermediate output 201 is_leaf: False
+Intermediate output 202 shape: torch.Size([1, 10, 256])
+Intermediate output 202 requires_grad: True
+Intermediate output 202 is_leaf: False
+Intermediate output 203 shape: torch.Size([1, 10, 256])
+Intermediate output 203 requires_grad: True
+Intermediate output 203 is_leaf: False
+Intermediate output 204 shape: torch.Size([1, 10, 256])
+Intermediate output 204 requires_grad: True
+Intermediate output 204 is_leaf: False
+Intermediate output 205 shape: torch.Size([1, 10, 256])
+Intermediate output 205 requires_grad: True
+Intermediate output 205 is_leaf: False
+Intermediate output 206 shape: torch.Size([1, 10, 1024])
+Intermediate output 206 requires_grad: True
+Intermediate output 206 is_leaf: False
+Intermediate output 207 shape: torch.Size([1, 10, 1024])
+Intermediate output 207 requires_grad: True
+Intermediate output 207 is_leaf: False
+Intermediate output 208 shape: torch.Size([1, 10, 1024])
+Intermediate output 208 requires_grad: True
+Intermediate output 208 is_leaf: False
+Intermediate output 209 shape: torch.Size([1, 10, 256])
+Intermediate output 209 requires_grad: True
+Intermediate output 209 is_leaf: False
+Intermediate output 210 shape: torch.Size([1, 10, 256])
+Intermediate output 210 requires_grad: True
+Intermediate output 210 is_leaf: False
+Intermediate output 211 shape: torch.Size([1, 10, 256])
+Intermediate output 211 requires_grad: True
+Intermediate output 211 is_leaf: False
+Intermediate output 212 shape: torch.Size([1, 10, 256])
+Intermediate output 212 requires_grad: True
+Intermediate output 212 is_leaf: False
+Intermediate output 213 shape: torch.Size([1, 10, 256])
+Intermediate output 213 requires_grad: True
+Intermediate output 213 is_leaf: False
+Intermediate output 214 shape: torch.Size([1, 10, 256])
+Intermediate output 214 requires_grad: True
+Intermediate output 214 is_leaf: False
+Intermediate output 215 shape: torch.Size([1, 10, 256])
+Intermediate output 215 requires_grad: True
+Intermediate output 215 is_leaf: False
+Intermediate output 216 shape: torch.Size([1, 10, 256])
+Intermediate output 216 requires_grad: True
+Intermediate output 216 is_leaf: False
+Intermediate output 217 shape: torch.Size([1, 10, 256])
+Intermediate output 217 requires_grad: True
+Intermediate output 217 is_leaf: False
+Intermediate output 218 shape: torch.Size([1, 10, 8, 32])
+Intermediate output 218 requires_grad: True
+Intermediate output 218 is_leaf: False
+Intermediate output 219 shape: torch.Size([1, 10, 256])
+Intermediate output 219 requires_grad: True
+Intermediate output 219 is_leaf: False
+Intermediate output 220 shape: torch.Size([1, 10, 256])
+Intermediate output 220 requires_grad: True
+Intermediate output 220 is_leaf: False
+Intermediate output 221 shape: torch.Size([1, 10, 256])
+Intermediate output 221 requires_grad: True
+Intermediate output 221 is_leaf: False
+Intermediate output 222 shape: torch.Size([1, 10, 256])
+Intermediate output 222 requires_grad: True
+Intermediate output 222 is_leaf: False
+Intermediate output 223 shape: torch.Size([1, 10, 256])
+Intermediate output 223 requires_grad: True
+Intermediate output 223 is_leaf: False
+Intermediate output 224 shape: torch.Size([1, 10, 1024])
+Intermediate output 224 requires_grad: True
+Intermediate output 224 is_leaf: False
+Intermediate output 225 shape: torch.Size([1, 10, 1024])
+Intermediate output 225 requires_grad: True
+Intermediate output 225 is_leaf: False
+Intermediate output 226 shape: torch.Size([1, 10, 1024])
+Intermediate output 226 requires_grad: True
+Intermediate output 226 is_leaf: False
+Intermediate output 227 shape: torch.Size([1, 10, 256])
+Intermediate output 227 requires_grad: True
+Intermediate output 227 is_leaf: False
+Intermediate output 228 shape: torch.Size([1, 10, 256])
+Intermediate output 228 requires_grad: True
+Intermediate output 228 is_leaf: False
+Intermediate output 229 shape: torch.Size([1, 10, 256])
+Intermediate output 229 requires_grad: True
+Intermediate output 229 is_leaf: False
+Intermediate output 230 shape: torch.Size([1, 10, 256])
+Intermediate output 230 requires_grad: True
+Intermediate output 230 is_leaf: False
+Intermediate output 231 shape: torch.Size([1, 10, 256])
+Intermediate output 231 requires_grad: True
+Intermediate output 231 is_leaf: False
+Intermediate output 232 shape: torch.Size([1, 10, 256])
+Intermediate output 232 requires_grad: True
+Intermediate output 232 is_leaf: False
+Intermediate output 233 shape: torch.Size([1, 10, 256])
+Intermediate output 233 requires_grad: True
+Intermediate output 233 is_leaf: False
+Intermediate output 234 shape: torch.Size([1, 10, 256])
+Intermediate output 234 requires_grad: True
+Intermediate output 234 is_leaf: False
+Intermediate output 235 shape: torch.Size([1, 10, 256])
+Intermediate output 235 requires_grad: True
+Intermediate output 235 is_leaf: False
+Intermediate output 236 shape: torch.Size([1, 10, 8, 32])
+Intermediate output 236 requires_grad: True
+Intermediate output 236 is_leaf: False
+Intermediate output 237 shape: torch.Size([1, 10, 256])
+Intermediate output 237 requires_grad: True
+Intermediate output 237 is_leaf: False
+Intermediate output 238 shape: torch.Size([1, 10, 256])
+Intermediate output 238 requires_grad: True
+Intermediate output 238 is_leaf: False
+Intermediate output 239 shape: torch.Size([1, 10, 256])
+Intermediate output 239 requires_grad: True
+Intermediate output 239 is_leaf: False
+Intermediate output 240 shape: torch.Size([1, 10, 256])
+Intermediate output 240 requires_grad: True
+Intermediate output 240 is_leaf: False
+Intermediate output 241 shape: torch.Size([1, 10, 256])
+Intermediate output 241 requires_grad: True
+Intermediate output 241 is_leaf: False
+Intermediate output 242 shape: torch.Size([1, 10, 1024])
+Intermediate output 242 requires_grad: True
+Intermediate output 242 is_leaf: False
+Intermediate output 243 shape: torch.Size([1, 10, 1024])
+Intermediate output 243 requires_grad: True
+Intermediate output 243 is_leaf: False
+Intermediate output 244 shape: torch.Size([1, 10, 1024])
+Intermediate output 244 requires_grad: True
+Intermediate output 244 is_leaf: False
+Intermediate output 245 shape: torch.Size([1, 10, 256])
+Intermediate output 245 requires_grad: True
+Intermediate output 245 is_leaf: False
+Intermediate output 246 shape: torch.Size([1, 10, 256])
+Intermediate output 246 requires_grad: True
+Intermediate output 246 is_leaf: False
+Intermediate output 247 shape: torch.Size([1, 10, 256])
+Intermediate output 247 requires_grad: True
+Intermediate output 247 is_leaf: False
+Intermediate output 248 shape: torch.Size([1, 10, 256])
+Intermediate output 248 requires_grad: True
+Intermediate output 248 is_leaf: False
+Intermediate output 249 shape: torch.Size([1, 10, 256])
+Intermediate output 249 requires_grad: True
+Intermediate output 249 is_leaf: False
+Intermediate output 250 shape: torch.Size([1, 10, 128])
+Intermediate output 250 requires_grad: True
+Intermediate output 250 is_leaf: False
+Intermediate output 251 shape: torch.Size([1, 10, 128])
+Intermediate output 251 requires_grad: True
+Intermediate output 251 is_leaf: False
+Intermediate output 252 shape: torch.Size([10, 128])
+Intermediate output 252 requires_grad: True
+Intermediate output 252 is_leaf: False
+Intermediate output 253 shape: torch.Size([10, 128])
+Intermediate output 253 requires_grad: True
+Intermediate output 253 is_leaf: False
+Intermediate output 254 shape: torch.Size([10, 128])
+Intermediate output 254 requires_grad: True
+Intermediate output 254 is_leaf: False
+Intermediate output 255 shape: torch.Size([10, 128])
+Intermediate output 255 requires_grad: True
+Intermediate output 255 is_leaf: False
+Intermediate output 256 shape: torch.Size([10, 128])
+Intermediate output 256 requires_grad: True
+Intermediate output 256 is_leaf: False
+Intermediate output 257 shape: torch.Size([1, 10, 128])
+Intermediate output 257 requires_grad: True
+Intermediate output 257 is_leaf: False
+Intermediate output 258 shape: torch.Size([1, 10, 128])
+Intermediate output 258 requires_grad: True
+Intermediate output 258 is_leaf: False
+Gradients were not computed. Debugging:
+requires_grad: True
+is_leaf: True
+Checking gradients of model parameters and intermediate outputs:
+module.resnet50.backbone.0.weight: No grad
+module.resnet50.backbone.1.weight: No grad
+module.resnet50.backbone.1.bias: No grad
+module.resnet50.backbone.4.0.conv1.weight: No grad
+module.resnet50.backbone.4.0.bn1.weight: No grad
+module.resnet50.backbone.4.0.bn1.bias: No grad
+module.resnet50.backbone.4.0.conv2.weight: No grad
+module.resnet50.backbone.4.0.bn2.weight: No grad
+module.resnet50.backbone.4.0.bn2.bias: No grad
+module.resnet50.backbone.4.0.conv3.weight: No grad
+module.resnet50.backbone.4.0.bn3.weight: No grad
+module.resnet50.backbone.4.0.bn3.bias: No grad
+module.resnet50.backbone.4.0.downsample.0.weight: No grad
+module.resnet50.backbone.4.0.downsample.1.weight: No grad
+module.resnet50.backbone.4.0.downsample.1.bias: No grad
+module.resnet50.backbone.4.1.conv1.weight: No grad
+module.resnet50.backbone.4.1.bn1.weight: No grad
+module.resnet50.backbone.4.1.bn1.bias: No grad
+module.resnet50.backbone.4.1.conv2.weight: No grad
+module.resnet50.backbone.4.1.bn2.weight: No grad
+module.resnet50.backbone.4.1.bn2.bias: No grad
+module.resnet50.backbone.4.1.conv3.weight: No grad
+module.resnet50.backbone.4.1.bn3.weight: No grad
+module.resnet50.backbone.4.1.bn3.bias: No grad
+module.resnet50.backbone.4.2.conv1.weight: No grad
+module.resnet50.backbone.4.2.bn1.weight: No grad
+module.resnet50.backbone.4.2.bn1.bias: No grad
+module.resnet50.backbone.4.2.conv2.weight: No grad
+module.resnet50.backbone.4.2.bn2.weight: No grad
+module.resnet50.backbone.4.2.bn2.bias: No grad
+module.resnet50.backbone.4.2.conv3.weight: No grad
+module.resnet50.backbone.4.2.bn3.weight: No grad
+module.resnet50.backbone.4.2.bn3.bias: No grad
+module.resnet50.backbone.5.0.conv1.weight: No grad
+module.resnet50.backbone.5.0.bn1.weight: No grad
+module.resnet50.backbone.5.0.bn1.bias: No grad
+module.resnet50.backbone.5.0.conv2.weight: No grad
+module.resnet50.backbone.5.0.bn2.weight: No grad
+module.resnet50.backbone.5.0.bn2.bias: No grad
+module.resnet50.backbone.5.0.conv3.weight: No grad
+module.resnet50.backbone.5.0.bn3.weight: No grad
+module.resnet50.backbone.5.0.bn3.bias: No grad
+module.resnet50.backbone.5.0.downsample.0.weight: No grad
+module.resnet50.backbone.5.0.downsample.1.weight: No grad
+module.resnet50.backbone.5.0.downsample.1.bias: No grad
+module.resnet50.backbone.5.1.conv1.weight: No grad
+module.resnet50.backbone.5.1.bn1.weight: No grad
+module.resnet50.backbone.5.1.bn1.bias: No grad
+module.resnet50.backbone.5.1.conv2.weight: No grad
+module.resnet50.backbone.5.1.bn2.weight: No grad
+module.resnet50.backbone.5.1.bn2.bias: No grad
+module.resnet50.backbone.5.1.conv3.weight: No grad
+module.resnet50.backbone.5.1.bn3.weight: No grad
+module.resnet50.backbone.5.1.bn3.bias: No grad
+module.resnet50.backbone.5.2.conv1.weight: No grad
+module.resnet50.backbone.5.2.bn1.weight: No grad
+module.resnet50.backbone.5.2.bn1.bias: No grad
+module.resnet50.backbone.5.2.conv2.weight: No grad
+module.resnet50.backbone.5.2.bn2.weight: No grad
+module.resnet50.backbone.5.2.bn2.bias: No grad
+module.resnet50.backbone.5.2.conv3.weight: No grad
+module.resnet50.backbone.5.2.bn3.weight: No grad
+module.resnet50.backbone.5.2.bn3.bias: No grad
+module.resnet50.backbone.5.3.conv1.weight: No grad
+module.resnet50.backbone.5.3.bn1.weight: No grad
+module.resnet50.backbone.5.3.bn1.bias: No grad
+module.resnet50.backbone.5.3.conv2.weight: No grad
+module.resnet50.backbone.5.3.bn2.weight: No grad
+module.resnet50.backbone.5.3.bn2.bias: No grad
+module.resnet50.backbone.5.3.conv3.weight: No grad
+module.resnet50.backbone.5.3.bn3.weight: No grad
+module.resnet50.backbone.5.3.bn3.bias: No grad
+module.resnet50.backbone.6.0.conv1.weight: No grad
+module.resnet50.backbone.6.0.bn1.weight: No grad
+module.resnet50.backbone.6.0.bn1.bias: No grad
+module.resnet50.backbone.6.0.conv2.weight: No grad
+module.resnet50.backbone.6.0.bn2.weight: No grad
+module.resnet50.backbone.6.0.bn2.bias: No grad
+module.resnet50.backbone.6.0.conv3.weight: No grad
+module.resnet50.backbone.6.0.bn3.weight: No grad
+module.resnet50.backbone.6.0.bn3.bias: No grad
+module.resnet50.backbone.6.0.downsample.0.weight: No grad
+module.resnet50.backbone.6.0.downsample.1.weight: No grad
+module.resnet50.backbone.6.0.downsample.1.bias: No grad
+module.resnet50.backbone.6.1.conv1.weight: No grad
+module.resnet50.backbone.6.1.bn1.weight: No grad
+module.resnet50.backbone.6.1.bn1.bias: No grad
+module.resnet50.backbone.6.1.conv2.weight: No grad
+module.resnet50.backbone.6.1.bn2.weight: No grad
+module.resnet50.backbone.6.1.bn2.bias: No grad
+module.resnet50.backbone.6.1.conv3.weight: No grad
+module.resnet50.backbone.6.1.bn3.weight: No grad
+module.resnet50.backbone.6.1.bn3.bias: No grad
+module.resnet50.backbone.6.2.conv1.weight: No grad
+module.resnet50.backbone.6.2.bn1.weight: No grad
+module.resnet50.backbone.6.2.bn1.bias: No grad
+module.resnet50.backbone.6.2.conv2.weight: No grad
+module.resnet50.backbone.6.2.bn2.weight: No grad
+module.resnet50.backbone.6.2.bn2.bias: No grad
+module.resnet50.backbone.6.2.conv3.weight: No grad
+module.resnet50.backbone.6.2.bn3.weight: No grad
+module.resnet50.backbone.6.2.bn3.bias: No grad
+module.resnet50.backbone.6.3.conv1.weight: No grad
+module.resnet50.backbone.6.3.bn1.weight: No grad
+module.resnet50.backbone.6.3.bn1.bias: No grad
+module.resnet50.backbone.6.3.conv2.weight: No grad
+module.resnet50.backbone.6.3.bn2.weight: No grad
+module.resnet50.backbone.6.3.bn2.bias: No grad
+module.resnet50.backbone.6.3.conv3.weight: No grad
+module.resnet50.backbone.6.3.bn3.weight: No grad
+module.resnet50.backbone.6.3.bn3.bias: No grad
+module.resnet50.backbone.6.4.conv1.weight: No grad
+module.resnet50.backbone.6.4.bn1.weight: No grad
+module.resnet50.backbone.6.4.bn1.bias: No grad
+module.resnet50.backbone.6.4.conv2.weight: No grad
+module.resnet50.backbone.6.4.bn2.weight: No grad
+module.resnet50.backbone.6.4.bn2.bias: No grad
+module.resnet50.backbone.6.4.conv3.weight: No grad
+module.resnet50.backbone.6.4.bn3.weight: No grad
+module.resnet50.backbone.6.4.bn3.bias: No grad
+module.resnet50.backbone.6.5.conv1.weight: No grad
+module.resnet50.backbone.6.5.bn1.weight: No grad
+module.resnet50.backbone.6.5.bn1.bias: No grad
+module.resnet50.backbone.6.5.conv2.weight: No grad
+module.resnet50.backbone.6.5.bn2.weight: No grad
+module.resnet50.backbone.6.5.bn2.bias: No grad
+module.resnet50.backbone.6.5.conv3.weight: No grad
+module.resnet50.backbone.6.5.bn3.weight: No grad
+module.resnet50.backbone.6.5.bn3.bias: No grad
+module.resnet50.finetune.0.conv1.weight: grad shape torch.Size([512, 1024, 1, 1]), grad sum: -4.972675323486328
+module.resnet50.finetune.0.bn1.weight: grad shape torch.Size([512]), grad sum: 0.008157104253768921
+module.resnet50.finetune.0.bn1.bias: grad shape torch.Size([512]), grad sum: -0.5404357314109802
+module.resnet50.finetune.0.conv2.weight: grad shape torch.Size([512, 512, 3, 3]), grad sum: -138.73529052734375
+module.resnet50.finetune.0.bn2.weight: grad shape torch.Size([512]), grad sum: 0.13375261425971985
+module.resnet50.finetune.0.bn2.bias: grad shape torch.Size([512]), grad sum: 0.2912643551826477
+module.resnet50.finetune.0.conv3.weight: grad shape torch.Size([2048, 512, 1, 1]), grad sum: 3.0052242279052734
+module.resnet50.finetune.0.bn3.weight: grad shape torch.Size([2048]), grad sum: -0.14724339544773102
+module.resnet50.finetune.0.bn3.bias: grad shape torch.Size([2048]), grad sum: -0.27972033619880676
+module.resnet50.finetune.0.downsample.0.weight: grad shape torch.Size([2048, 1024, 1, 1]), grad sum: -22.052881240844727
+module.resnet50.finetune.0.downsample.1.weight: grad shape torch.Size([2048]), grad sum: -0.3550499677658081
+module.resnet50.finetune.0.downsample.1.bias: grad shape torch.Size([2048]), grad sum: -0.27972033619880676
+module.resnet50.finetune.1.conv1.weight: grad shape torch.Size([512, 2048, 1, 1]), grad sum: -44.314937591552734
+module.resnet50.finetune.1.bn1.weight: grad shape torch.Size([512]), grad sum: 0.19052931666374207
+module.resnet50.finetune.1.bn1.bias: grad shape torch.Size([512]), grad sum: -0.017205312848091125
+module.resnet50.finetune.1.conv2.weight: grad shape torch.Size([512, 512, 3, 3]), grad sum: -1.5370807647705078
+module.resnet50.finetune.1.bn2.weight: grad shape torch.Size([512]), grad sum: 0.06496480107307434
+module.resnet50.finetune.1.bn2.bias: grad shape torch.Size([512]), grad sum: -0.16087506711483002
+module.resnet50.finetune.1.conv3.weight: grad shape torch.Size([2048, 512, 1, 1]), grad sum: -1.3653583526611328
+module.resnet50.finetune.1.bn3.weight: grad shape torch.Size([2048]), grad sum: 0.2235131859779358
+module.resnet50.finetune.1.bn3.bias: grad shape torch.Size([2048]), grad sum: 0.0030093546956777573
+module.resnet50.finetune.2.conv1.weight: grad shape torch.Size([512, 2048, 1, 1]), grad sum: -37.691410064697266
+module.resnet50.finetune.2.bn1.weight: grad shape torch.Size([512]), grad sum: 0.18572336435317993
+module.resnet50.finetune.2.bn1.bias: grad shape torch.Size([512]), grad sum: 0.2806786298751831
+module.resnet50.finetune.2.conv2.weight: grad shape torch.Size([512, 512, 3, 3]), grad sum: -48.85394287109375
+module.resnet50.finetune.2.bn2.weight: grad shape torch.Size([512]), grad sum: -0.004242360591888428
+module.resnet50.finetune.2.bn2.bias: grad shape torch.Size([512]), grad sum: -0.03657902777194977
+module.resnet50.finetune.2.conv3.weight: grad shape torch.Size([2048, 512, 1, 1]), grad sum: 2.7916908264160156
+module.resnet50.finetune.2.bn3.weight: grad shape torch.Size([2048]), grad sum: 0.003150423988699913
+module.resnet50.finetune.2.bn3.bias: grad shape torch.Size([2048]), grad sum: 0.0034407086204737425
+module.transformation.fc_layer.1.weight: grad shape torch.Size([512, 2048]), grad sum: -18.80759048461914
+module.transformation.fc_layer.1.bias: grad shape torch.Size([512]), grad sum: -5.578840500675142e-09
+module.transformation.fc_layer.2.weight: grad shape torch.Size([512]), grad sum: 1.7348676919937134e-05
+module.transformation.fc_layer.2.bias: grad shape torch.Size([512]), grad sum: 0.025781065225601196
+module.transformation.fc_layer.5.weight: grad shape torch.Size([512, 512]), grad sum: -2.9440765380859375
+module.transformation.fc_layer.5.bias: grad shape torch.Size([512]), grad sum: -1.0550138540565968e-10
+module.transformation.fc_layer.6.weight: grad shape torch.Size([512]), grad sum: 0.11700695753097534
+module.transformation.fc_layer.6.bias: grad shape torch.Size([512]), grad sum: 0.09623768925666809
+module.transformation.video_emb.weight: grad shape torch.Size([256, 512]), grad sum: 0.2698631286621094
+module.transformation.video_emb.bias: grad shape torch.Size([256]), grad sum: 0.010758474469184875
+module.encoder.encodingLayers.0.residualNetwork_1.layerNorm.weight: grad shape torch.Size([256]), grad sum: -0.01418931782245636
+module.encoder.encodingLayers.0.residualNetwork_1.layerNorm.bias: grad shape torch.Size([256]), grad sum: 0.0006407760083675385
+module.encoder.encodingLayers.0.residualNetwork_2.layerNorm.weight: grad shape torch.Size([256]), grad sum: -0.00027697905898094177
+module.encoder.encodingLayers.0.residualNetwork_2.layerNorm.bias: grad shape torch.Size([256]), grad sum: 0.03412538021802902
+module.encoder.encodingLayers.0.attention.Q2d.weight: grad shape torch.Size([256, 256]), grad sum: -6.705522537231445e-08
+module.encoder.encodingLayers.0.attention.Q2d.bias: grad shape torch.Size([256]), grad sum: -0.0016168709844350815
+module.encoder.encodingLayers.0.attention.K2d.weight: grad shape torch.Size([256, 256]), grad sum: 1.1920928955078125e-07
+module.encoder.encodingLayers.0.attention.K2d.bias: grad shape torch.Size([256]), grad sum: -4.503817763179541e-09
+module.encoder.encodingLayers.0.attention.V2d.weight: grad shape torch.Size([256, 256]), grad sum: 2.384185791015625e-07
+module.encoder.encodingLayers.0.attention.V2d.bias: grad shape torch.Size([256]), grad sum: -0.09355573356151581
+module.encoder.encodingLayers.0.attention.d2O.weight: grad shape torch.Size([256, 256]), grad sum: 0.8511146306991577
+module.encoder.encodingLayers.0.attention.d2O.bias: grad shape torch.Size([256]), grad sum: 0.03778619319200516
+module.encoder.encodingLayers.0.feedForward.0.weight: grad shape torch.Size([1024, 256]), grad sum: 3.948807716369629e-07
+module.encoder.encodingLayers.0.feedForward.0.bias: grad shape torch.Size([1024]), grad sum: 0.10645388066768646
+module.encoder.encodingLayers.0.feedForward.3.weight: grad shape torch.Size([256, 1024]), grad sum: -1.2026405334472656
+module.encoder.encodingLayers.0.feedForward.3.bias: grad shape torch.Size([256]), grad sum: -0.004351058974862099
+module.encoder.encodingLayers.1.residualNetwork_1.layerNorm.weight: grad shape torch.Size([256]), grad sum: -0.011499485932290554
+module.encoder.encodingLayers.1.residualNetwork_1.layerNorm.bias: grad shape torch.Size([256]), grad sum: -0.0044191740453243256
+module.encoder.encodingLayers.1.residualNetwork_2.layerNorm.weight: grad shape torch.Size([256]), grad sum: -0.014055036939680576
+module.encoder.encodingLayers.1.residualNetwork_2.layerNorm.bias: grad shape torch.Size([256]), grad sum: 0.005982092581689358
+module.encoder.encodingLayers.1.attention.Q2d.weight: grad shape torch.Size([256, 256]), grad sum: -2.0489096641540527e-08
+module.encoder.encodingLayers.1.attention.Q2d.bias: grad shape torch.Size([256]), grad sum: -0.00820672232657671
+module.encoder.encodingLayers.1.attention.K2d.weight: grad shape torch.Size([256, 256]), grad sum: 2.9802322387695312e-08
+module.encoder.encodingLayers.1.attention.K2d.bias: grad shape torch.Size([256]), grad sum: 3.4642653190530837e-09
+module.encoder.encodingLayers.1.attention.V2d.weight: grad shape torch.Size([256, 256]), grad sum: 0.0
+module.encoder.encodingLayers.1.attention.V2d.bias: grad shape torch.Size([256]), grad sum: -0.05980684235692024
+module.encoder.encodingLayers.1.attention.d2O.weight: grad shape torch.Size([256, 256]), grad sum: -0.01640898361802101
+module.encoder.encodingLayers.1.attention.d2O.bias: grad shape torch.Size([256]), grad sum: -0.006986889988183975
+module.encoder.encodingLayers.1.feedForward.0.weight: grad shape torch.Size([1024, 256]), grad sum: -2.4959444999694824e-07
+module.encoder.encodingLayers.1.feedForward.0.bias: grad shape torch.Size([1024]), grad sum: -0.018085863441228867
+module.encoder.encodingLayers.1.feedForward.3.weight: grad shape torch.Size([256, 1024]), grad sum: 3.451951026916504
+module.encoder.encodingLayers.1.feedForward.3.bias: grad shape torch.Size([256]), grad sum: 0.013076672330498695
+module.encoder.encodingLayers.2.residualNetwork_1.layerNorm.weight: grad shape torch.Size([256]), grad sum: -0.020298991352319717
+module.encoder.encodingLayers.2.residualNetwork_1.layerNorm.bias: grad shape torch.Size([256]), grad sum: -0.038187719881534576
+module.encoder.encodingLayers.2.residualNetwork_2.layerNorm.weight: grad shape torch.Size([256]), grad sum: -0.030587192624807358
+module.encoder.encodingLayers.2.residualNetwork_2.layerNorm.bias: grad shape torch.Size([256]), grad sum: 0.02433329075574875
+module.encoder.encodingLayers.2.attention.Q2d.weight: grad shape torch.Size([256, 256]), grad sum: -5.587935447692871e-09
+module.encoder.encodingLayers.2.attention.Q2d.bias: grad shape torch.Size([256]), grad sum: 0.0024796994403004646
+module.encoder.encodingLayers.2.attention.K2d.weight: grad shape torch.Size([256, 256]), grad sum: 1.4901161193847656e-08
+module.encoder.encodingLayers.2.attention.K2d.bias: grad shape torch.Size([256]), grad sum: 7.99445842858404e-09
+module.encoder.encodingLayers.2.attention.V2d.weight: grad shape torch.Size([256, 256]), grad sum: -8.940696716308594e-08
+module.encoder.encodingLayers.2.attention.V2d.bias: grad shape torch.Size([256]), grad sum: 0.030424192547798157
+module.encoder.encodingLayers.2.attention.d2O.weight: grad shape torch.Size([256, 256]), grad sum: -0.026750192046165466
+module.encoder.encodingLayers.2.attention.d2O.bias: grad shape torch.Size([256]), grad sum: -0.019396144896745682
+module.encoder.encodingLayers.2.feedForward.0.weight: grad shape torch.Size([1024, 256]), grad sum: -2.3702159523963928e-07
+module.encoder.encodingLayers.2.feedForward.0.bias: grad shape torch.Size([1024]), grad sum: -0.06496015191078186
+module.encoder.encodingLayers.2.feedForward.3.weight: grad shape torch.Size([256, 1024]), grad sum: 0.3961668014526367
+module.encoder.encodingLayers.2.feedForward.3.bias: grad shape torch.Size([256]), grad sum: 0.0013256929814815521
+module.encoder.embedding_layer.weight: grad shape torch.Size([128, 256]), grad sum: -0.34122753143310547
+module.encoder.embedding_layer.bias: grad shape torch.Size([128]), grad sum: -3.6612618714571e-08
+module.projection.0.weight: grad shape torch.Size([128, 128]), grad sum: 0.0038520097732543945
+module.projection.0.bias: grad shape torch.Size([128]), grad sum: 1.673470251262188e-08
+module.projection.1.weight: grad shape torch.Size([128]), grad sum: 0.0042499881237745285
+module.projection.1.bias: grad shape torch.Size([128]), grad sum: 0.004518959671258926
+module.projection.3.weight: grad shape torch.Size([128, 128]), grad sum: 10.74299144744873
+module.projection.3.bias: grad shape torch.Size([128]), grad sum: 0.1803356409072876
+Intermediate output 0: No grad
+Intermediate output 1: No grad
+Intermediate output 2: No grad
+Intermediate output 3: No grad
+Intermediate output 4: No grad
+Intermediate output 5: No grad
+Intermediate output 6: No grad
+Intermediate output 7: No grad
+Intermediate output 8: No grad
+Intermediate output 9: No grad
+Intermediate output 10: No grad
+Intermediate output 11: No grad
+Intermediate output 12: No grad
+Intermediate output 13: No grad
+Intermediate output 14: No grad
+Intermediate output 15: No grad
+Intermediate output 16: No grad
+Intermediate output 17: No grad
+Intermediate output 18: No grad
+Intermediate output 19: No grad
+Intermediate output 20: No grad
+Intermediate output 21: No grad
+Intermediate output 22: No grad
+Intermediate output 23: No grad
+Intermediate output 24: No grad
+Intermediate output 25: No grad
+Intermediate output 26: No grad
+Intermediate output 27: No grad
+Intermediate output 28: No grad
+Intermediate output 29: No grad
+Intermediate output 30: No grad
+Intermediate output 31: No grad
+Intermediate output 32: No grad
+Intermediate output 33: No grad
+Intermediate output 34: No grad
+Intermediate output 35: No grad
+Intermediate output 36: No grad
+Intermediate output 37: No grad
+Intermediate output 38: No grad
+Intermediate output 39: No grad
+Intermediate output 40: No grad
+Intermediate output 41: No grad
+Intermediate output 42: No grad
+Intermediate output 43: No grad
+Intermediate output 44: No grad
+Intermediate output 45: No grad
+Intermediate output 46: No grad
+Intermediate output 47: No grad
+Intermediate output 48: No grad
+Intermediate output 49: No grad
+Intermediate output 50: No grad
+Intermediate output 51: No grad
+Intermediate output 52: No grad
+Intermediate output 53: No grad
+Intermediate output 54: No grad
+Intermediate output 55: No grad
+Intermediate output 56: No grad
+Intermediate output 57: No grad
+Intermediate output 58: No grad
+Intermediate output 59: No grad
+Intermediate output 60: No grad
+Intermediate output 61: No grad
+Intermediate output 62: No grad
+Intermediate output 63: No grad
+Intermediate output 64: No grad
+Intermediate output 65: No grad
+Intermediate output 66: No grad
+Intermediate output 67: No grad
+Intermediate output 68: No grad
+Intermediate output 69: No grad
+Intermediate output 70: No grad
+Intermediate output 71: No grad
+Intermediate output 72: No grad
+Intermediate output 73: No grad
+Intermediate output 74: No grad
+Intermediate output 75: No grad
+Intermediate output 76: No grad
+Intermediate output 77: No grad
+Intermediate output 78: No grad
+Intermediate output 79: No grad
+Intermediate output 80: No grad
+Intermediate output 81: No grad
+Intermediate output 82: No grad
+Intermediate output 83: No grad
+Intermediate output 84: No grad
+Intermediate output 85: No grad
+Intermediate output 86: No grad
+Intermediate output 87: No grad
+Intermediate output 88: No grad
+Intermediate output 89: No grad
+Intermediate output 90: No grad
+Intermediate output 91: No grad
+Intermediate output 92: No grad
+Intermediate output 93: No grad
+Intermediate output 94: No grad
+Intermediate output 95: No grad
+Intermediate output 96: No grad
+Intermediate output 97: No grad
+Intermediate output 98: No grad
+Intermediate output 99: No grad
+Intermediate output 100: No grad
+Intermediate output 101: No grad
+Intermediate output 102: No grad
+Intermediate output 103: No grad
+Intermediate output 104: No grad
+Intermediate output 105: No grad
+Intermediate output 106: No grad
+Intermediate output 107: No grad
+Intermediate output 108: No grad
+Intermediate output 109: No grad
+Intermediate output 110: No grad
+Intermediate output 111: No grad
+Intermediate output 112: No grad
+Intermediate output 113: No grad
+Intermediate output 114: No grad
+Intermediate output 115: No grad
+Intermediate output 116: No grad
+Intermediate output 117: No grad
+Intermediate output 118: No grad
+Intermediate output 119: No grad
+Intermediate output 120: No grad
+Intermediate output 121: No grad
+Intermediate output 122: No grad
+Intermediate output 123: No grad
+Intermediate output 124: No grad
+Intermediate output 125: No grad
+Intermediate output 126: No grad
+Intermediate output 127: No grad
+Intermediate output 128: No grad
+Intermediate output 129: No grad
+Intermediate output 130: No grad
+Intermediate output 131: No grad
+Intermediate output 132: No grad
+Intermediate output 133: No grad
+Intermediate output 134: No grad
+Intermediate output 135: No grad
+Intermediate output 136: No grad
+Intermediate output 137: No grad
+Intermediate output 138: No grad
+Intermediate output 139: No grad
+Intermediate output 140: No grad
+Intermediate output 141: No grad
+Intermediate output 142: grad shape torch.Size([10, 1024, 14, 14]), grad sum: -0.00015354156494140625
+Intermediate output 143: grad shape torch.Size([10, 1024, 14, 14]), grad sum: -0.00015354156494140625
+Intermediate output 144: grad shape torch.Size([10, 1024, 14, 14]), grad sum: -0.00015354156494140625
+Intermediate output 145: grad shape torch.Size([10, 1024, 14, 14]), grad sum: -0.00015354156494140625
+Intermediate output 146: grad shape torch.Size([10, 1024, 14, 14]), grad sum: -0.00015354156494140625
+Intermediate output 147: No grad
+Intermediate output 148: No grad
+Intermediate output 149: No grad
+Intermediate output 150: No grad
+Intermediate output 151: No grad
+Intermediate output 152: No grad
+Intermediate output 153: No grad
+Intermediate output 154: No grad
+Intermediate output 155: No grad
+Intermediate output 156: No grad
+Intermediate output 157: No grad
+Intermediate output 158: No grad
+Intermediate output 159: No grad
+Intermediate output 160: No grad
+Intermediate output 161: No grad
+Intermediate output 162: No grad
+Intermediate output 163: No grad
+Intermediate output 164: No grad
+Intermediate output 165: No grad
+Intermediate output 166: No grad
+Intermediate output 167: No grad
+Intermediate output 168: No grad
+Intermediate output 169: No grad
+Intermediate output 170: No grad
+Intermediate output 171: No grad
+Intermediate output 172: No grad
+Intermediate output 173: No grad
+Intermediate output 174: No grad
+Intermediate output 175: No grad
+Intermediate output 176: No grad
+Intermediate output 177: No grad
+Intermediate output 178: No grad
+Intermediate output 179: No grad
+Intermediate output 180: No grad
+Intermediate output 181: No grad
+Intermediate output 182: No grad
+Intermediate output 183: No grad
+Intermediate output 184: No grad
+Intermediate output 185: No grad
+Intermediate output 186: No grad
+Intermediate output 187: No grad
+Intermediate output 188: No grad
+Intermediate output 189: No grad
+Intermediate output 190: No grad
+Intermediate output 191: No grad
+Intermediate output 192: No grad
+Intermediate output 193: No grad
+Intermediate output 194: No grad
+Intermediate output 195: No grad
+Intermediate output 196: No grad
+Intermediate output 197: No grad
+Intermediate output 198: No grad
+Intermediate output 199: No grad
+Intermediate output 200: No grad
+Intermediate output 201: No grad
+Intermediate output 202: No grad
+Intermediate output 203: No grad
+Intermediate output 204: No grad
+Intermediate output 205: No grad
+Intermediate output 206: No grad
+Intermediate output 207: No grad
+Intermediate output 208: No grad
+Intermediate output 209: No grad
+Intermediate output 210: No grad
+Intermediate output 211: No grad
+Intermediate output 212: No grad
+Intermediate output 213: No grad
+Intermediate output 214: No grad
+Intermediate output 215: No grad
+Intermediate output 216: No grad
+Intermediate output 217: No grad
+Intermediate output 218: No grad
+Intermediate output 219: No grad
+Intermediate output 220: No grad
+Intermediate output 221: No grad
+Intermediate output 222: No grad
+Intermediate output 223: No grad
+Intermediate output 224: No grad
+Intermediate output 225: No grad
+Intermediate output 226: No grad
+Intermediate output 227: No grad
+Intermediate output 228: No grad
+Intermediate output 229: No grad
+Intermediate output 230: No grad
+Intermediate output 231: No grad
+Intermediate output 232: No grad
+Intermediate output 233: No grad
+Intermediate output 234: No grad
+Intermediate output 235: No grad
+Intermediate output 236: No grad
+Intermediate output 237: No grad
+Intermediate output 238: No grad
+Intermediate output 239: No grad
+Intermediate output 240: No grad
+Intermediate output 241: No grad
+Intermediate output 242: No grad
+Intermediate output 243: No grad
+Intermediate output 244: No grad
+Intermediate output 245: No grad
+Intermediate output 246: No grad
+Intermediate output 247: No grad
+Intermediate output 248: No grad
+Intermediate output 249: No grad
+Intermediate output 250: No grad
+Intermediate output 251: No grad
+Intermediate output 252: No grad
+Intermediate output 253: No grad
+Intermediate output 254: No grad
+Intermediate output 255: No grad
+Intermediate output 256: No grad
+Intermediate output 257: No grad
+Intermediate output 258: No grad
+Error: Gradients could not be computed.
+Please check the model architecture and ensure gradients can be computed.

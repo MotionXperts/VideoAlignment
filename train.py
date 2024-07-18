@@ -76,7 +76,7 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
                 num_views, num_steps, c, h, w = video.shape
             video = video.view(-1, num_steps, c, h, w)
             embs = model(video,video_masks=mask,skeleton=skeleton)
-            loss = algo[current_algo].compute_loss(embs,seq_len.to(embs.device),steps.to(embs.device),mask.to(embs.device),images=original_video,summary_writer=summary_writer,epoch=cur_epoch,split="train")
+            loss = algo[current_algo].compute_loss(embs,seq_len.to(embs.device),steps.to(embs.device),mask.to(embs.device),DEBUG=False,images=original_video,summary_writer=summary_writer,epoch=cur_epoch,split="train")
             if lav is not None:
                 lav_loss = lav.compute_loss(embs,steps.to(embs.device),seq_len.to(embs.device))
                 loss=loss+lav_loss
@@ -186,7 +186,7 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                     input_video = video[steps.long()]
                     input_video = input_video.unsqueeze(0)
                     with torch.cuda.amp.autocast():
-                        emb_feats = model.module(input_video,video_masks=None,skeleton=skeleton,split="eval")
+                        emb_feats = model.module(input_video.to(model.device),video_masks=None,skeleton=skeleton,split="eval")
                 
                 
                 embs.append(emb_feats[0].cpu())
@@ -209,23 +209,6 @@ def evaluate(cfg,algo,model,epoch,loader,summary_writer,KD,RE,split="val",tsNE_o
                 dataset["subset_name"] = cfg.DATASETS[index]
             KD.evaluate(dataset,epoch,summary_writer,split=split)
             RE.evaluate(dataset,epoch,summary_writer,split=split)
-        
-            ## check one same q/c pair and check an arbitrary q/c pair
-            # queries = [0]
-            # candidates = [1]
-            # query = np.random.randint(0,len(embs_list))
-            # candidate = np.random.randint(0,len(embs_list))
-            # while query == candidate:
-            #     candidate = np.random.randint(0,len(embs_list))
-            # queries.append(query)
-            # candidates.append(candidate)
-
-            # for query,candidate in zip(queries,candidates):
-            #     video_name = os.path.join(cfg.VISUALIZATION_DIR,f'{split}_{epoch}_{query}_{candidate}.mp4')
-            #     print(f"creating video {video_name}")
-            #     labels = np.asarray([frame_labels_list[query],frame_labels_list[candidate]])
-            #     create_video(embs_list[query],video_list[query],embs_list[candidate],video_list[candidate],
-            #         video_name,use_dtw=True,tsNE_only=(split=="train" or tsNE_only),labels=labels,cfg=cfg)
 
 
 def construct_optimizer(model, cfg):
@@ -317,9 +300,6 @@ def main():
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank], 
             output_device=args.local_rank,find_unused_parameters=False)
 
-    # optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.OPTIMIZER.LR.INITIAL_LR,
-    #         betas=(0.9, 0.999),
-    #         weight_decay=cfg.OPTIMIZER.WEIGHT_DECAY,)
     optimizer = construct_optimizer(model,cfg)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg.TRAIN.MAX_EPOCHS + 1)
     summary_writer = SummaryWriter(os.path.join(cfg.LOGDIR, 'train_logs'))
@@ -355,11 +335,6 @@ def main():
     else:
         test_name = 'processed_videos_test'
     
-    # if du.is_root_proc():
-    #     logger.info(f"train_name: {train_name}")
-    #     for name,param in model.named_parameters():
-    #         if param.requires_grad:
-    #             logger.info(f'training layer: {name}')
 
     if cfg.TRAINING_ALGO=='tcc_scl_tcc':
         train_loaders["TCC"],train_samplers["TCC"],train_eval_loaders["TCC"] = construct_dataloader(cfg, train_name,"tcc")
