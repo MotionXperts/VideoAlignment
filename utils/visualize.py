@@ -78,7 +78,7 @@ def viz_tSNE(embs,output_path,use_dtw=True,query=0,labels=None,cfg=None,start_fr
         dis = cdist(embs[query][query_valid_frames], embs[candidate][candidates_valid_frames][nn], dist_fn)
         min_index,min_value = np.argmin(dis,axis=1),np.min(dis,axis=1)
         distances.append((min_index,min_value))
-    X = np.empty((0, 128))
+    X = np.empty((0, embs[0].shape[1]))
     y = []
     frame_idx = []
 
@@ -104,9 +104,7 @@ def viz_tSNE(embs,output_path,use_dtw=True,query=0,labels=None,cfg=None,start_fr
         plt.text(X_norm[i, 0], X_norm[i, 1], str(frame_idx[i]), color=plt.cm.Set1(y[i]), 
                 fontdict={'weight': 'bold', 'size': 9})
 
-        # if (i < embs[0].shape[0] and (i > embs[1].shape[0]+start_frame or i < start_frame)):
-        ##  if False:
-        #     # draw gray circles
+        # if (i < embs[0].shape[0] and ((i > embs[1].shape[0]+start_frame) or i < start_frame)):
         #     circle = plt.Circle((X_norm[i, 0], X_norm[i, 1]), radius=0.01, color='gray', fill=True)
         # else:
         #     circle = plt.Circle((X_norm[i, 0], X_norm[i, 1]), radius=0.01, color=plt.cm.Set1(y[i]), fill=True)
@@ -118,13 +116,27 @@ def viz_tSNE(embs,output_path,use_dtw=True,query=0,labels=None,cfg=None,start_fr
     plt.close('all')
 
 def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use_dtw, interval=50, time_stride=1, image_out=False,
-    tsNE_only=False,labels=None,cfg=None):
+    tsNE_only=False,labels=None,cfg=None,stop_frame = None):
     """Create aligned videos."""
     nns = align(query_embs, key_embs, use_dtw)
+
+
     if time_stride>1:
         query_frames = query_frames[::time_stride]
         nns = nns[::time_stride]
         interval = interval*time_stride
+    ## define the stop frame in the standard video, the moment the player video hit the stop frame, do not continue the video
+    if stop_frame is not None:
+        ## find the index of the stop frame in the key video
+        raw_stop_frame_idx = np.where(nns==stop_frame)
+        while len(raw_stop_frame_idx[0]) == 0:
+            stop_frame += 1
+            raw_stop_frame_idx = np.where(nns==stop_frame)
+        stop_frame_idx = raw_stop_frame_idx[0][0]
+        # print('stop_frame: ' , stop_frame)
+        # print('nn: ' , nns)
+        # print('stop_frame_idx: ' , stop_frame_idx)
+
     kendalls_embs = []
     kendalls_embs.append(query_embs)
     kendalls_embs.append(key_embs)
@@ -186,7 +198,8 @@ def create_video(query_embs, query_frames, key_embs, key_frames, video_path, use
             fig,
             update,
             init_func = init,
-            frames=(len(query_frames)),
+            # frames=(len(query_frames)),
+            frames = stop_frame_idx if stop_frame is not None else len(query_frames),
             interval=interval,
             blit=False)
         

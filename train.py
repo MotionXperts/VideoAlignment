@@ -91,8 +91,6 @@ def train(cfg,algo,model,trainloader,optimizer,scheduler,cur_epoch,summary_write
         
         loss[torch.isnan(loss)] = 0
         total_loss += du.all_reduce([loss])[0].item() / len(trainloader)
-        # logger.info(f"embs: {embs.sum()}")
-        # logger.info(f"total_loss: {total_loss}")
 
     if du.is_root_proc():
         if DEBUG:

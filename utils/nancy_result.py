@@ -84,7 +84,7 @@ def align_by_start(query_embs,query_frames,key_embs,key_frames,output_name,tsNE_
     frames = [query_frames,key_frames[start_frame:start_frame+len(query_frames)]]
     # embs = [query_embs,key_embs[start_frame:start_frame+len(query_embs)]] ## why do this? i forget
     embs = [key_embs,query_embs]
-    viz_tSNE(embs,output_name.replace('.mp4','.png'))
+    viz_tSNE(embs,output_name.replace('.mp4','.png'),start_frame=start_frame)
     if tsNE_only:
       return
     gen_result(start_frames,frames,output_name)

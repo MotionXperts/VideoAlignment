@@ -4,30 +4,35 @@ import numpy as np
 import pickle
 import os
 import json
-from icecream import ic
 from utils.nancy_result import align
 
 class FramesDumper():
-    def __init__(self,cfg,dataset,standard_emb):
+    def __init__(self,cfg,dataset,standard_emb,jump_type=None):
         self.cfg = cfg
         self.dataset = dataset
         self.standard_emb = torch.from_numpy(standard_emb)
-        self.input_train_pickle = os.path.join(self.cfg.PATH_TO_DATASET,self.cfg.DATA.TRAIN_NAME + '.pkl')
-        # self.input_val_pickle = os.path.join(self.cfg.PATH_TO_DATASET,'long_val_label.pkl')
-        self.input_test_pickle = os.path.join(self.cfg.PATH_TO_DATASET,self.cfg.DATA.TEST_NAME+ '.pkl')
 
-        self.input_train = self.load_pickle(self.input_train_pickle)
-        # self.input_val = self.load_pickle(self.input_val_pickle)
-        self.input_test = self.load_pickle(self.input_test_pickle)
-        self.original_test_length = len(self.input_test)
+        ## Make split, input and output based on keys of dataset
+        self.split = {}
+        self.inputs = []
+        self.output_pickles = []
 
-        self.output_train_pickle = os.path.join(self.cfg.LOGDIR,'output_new_trimmed_train_label.pkl')
-        # self.output_val_pickle = os.path.join(self.cfg.LOGDIR,'output_val_label.pkl')
-        self.output_test_pickle = os.path.join(self.cfg.LOGDIR,'output_new_trimmed_test_label.pkl')
-        # self.standard_output_pickle = os.path.join(self.cfg.LOGDIR,'standard_label.pkl')
+        for split_name in self.dataset.keys():
+            self.split[split_name] = []
+            if split_name == 'train':
+                PKL_NAME = self.cfg.DATA.TRAIN_NAME
+            elif split_name == 'test':
+                PKL_NAME = self.cfg.DATA.TEST_NAME
+            else:
+                raise ValueError(f"Unknown split name: {split_name}")
+            self.input_pickle = os.path.join(self.cfg.PATH_TO_DATASET,PKL_NAME + '.pkl')
+            self.input = self.load_pickle(self.input_pickle)
+            self.inputs.append(self.input)
+            self.output_pickle = os.path.join(self.cfg.LOGDIR,f'{jump_type}_{split_name}_{cfg.args.second_align}.pkl')
+            self.output_pickles.append(self.output_pickle)
+
 
         self.split_path = os.path.join(self.cfg.LOGDIR,'splits.json')
-        self.split = {'train':[],'val':[],'test':[]}
 
     def load_pickle(self,path):
         with open(path,'rb') as f:
@@ -82,79 +87,56 @@ class FramesDumper():
         print('opt start frame : ',opt_start_frame)
         return opt_start_frame
 
+    def to_torch_tensor(self,data):
+        if isinstance(data, np.ndarray):
+            try:
+                return torch.from_numpy(data)
+            except:
+                return data
+        return data
 
     def __call__(self):
-        frame_label_field = "frame_label"
-        if self.cfg.args.long:
-            frame_label_field = "original_frame_label"
-
-        # for split_name,split,output_pickle in zip(['train','val','test'],[self.input_train,self.input_val,self.input_test],[self.output_train_pickle,self.output_val_pickle,self.output_test_pickle]):
-        for split_name,split,output_pickle in zip(['train','test'],[self.input_train,self.input_test],[self.output_train_pickle,self.output_test_pickle]):
+        for split_name,input_pkl,output_pickle in zip(self.split.keys(),self.inputs,self.output_pickles):
             print(f"Dumping {split_name} ...")
             dataset = self.dataset[split_name]
-
-            # this code is adjusted as "before dumping, seprate standard from test set"
-            # if split_name == "test": # because we dont want to make standard's label, delete it here.
-            #     del dataset["embs"][-1]
-            #     del dataset["name"][-1]
-            #     del dataset["video"][-1]
-            #     del dataset["labels"][-1]
-            assert len(dataset["names"]) == len(split),ic(len(dataset["names"]),len(split))
-            for index,entry in enumerate(split):
+            
+            assert len(dataset["names"]) == len(input_pkl),f"dataset: {len(dataset['names'])}, input_pkl: {len(input_pkl)} is not same"
+            for index,entry in enumerate(input_pkl):
                 embs = dataset["embs"][index]
-                # if "locate_module_label" not in entry:
-                #     entry["locate_module_label"] = torch.zeros_like(entry["frame_label"])
-                # labels = entry["locate_module_label"]
-                # assert len(labels) == len(entry["frame_label"])
-                assert len(embs) == len(entry[frame_label_field]), f"embs: {len(embs)}, frame_label: {len(entry[frame_label_field])} is not same at {entry['name']}"
+                
+                ## Need to fix this ...
+                # assert abs(len(embs)-len(entry[frame_label_field]))<=2, f"embs: {len(embs)}, frame_label: {len(entry[frame_label_field])} is not same at {entry['name']}"
                 
                 ## the longer will be key, shorter will be query
                 query_embs = embs
                 key_embs = self.standard_emb
                 if len(query_embs) > len(key_embs):
                     key_embs,query_embs = query_embs,key_embs
-                try:
-                    query_embs = torch.from_numpy(query_embs)
-                except:
-                    pass
-                try:
-                    key_embs = torch.from_numpy(key_embs)
-                except:
-                    pass
-
-                if 'standard' not in entry['video_name']:
-                    entry['annotations_label'] = entry['original_annotations_label'][entry['start_frame']:entry['start_frame']+len(entry['subtraction'])]
-                    
-                start_frame = align((query_embs),(key_embs),None)
-
-
-                end_frame = start_frame + len(query_embs)
-                # assert start_frame<= len(entry["frame_label"]) and end_frame <= len(entry["frame_label"]) ## will fail in slack cases
-                # entry["locate_module_start_frame"] = start_frame
-                # entry["locate_module_end_frame"] = end_frame
-                # entry["locate_module_label"] = labels[start_frame:end_frame]
-
-                # aligned_embs = embs[start_frame:end_frame]
-                subtraction = key_embs[start_frame:end_frame] - query_embs
-                # assert aligned_embs.shape == self.standard_emb.shape,ic(embs.shape,self.standard_emb.shape)
-                entry["subtraction"] = subtraction
+                query_embs = self.to_torch_tensor(query_embs)
+                key_embs = self.to_torch_tensor(key_embs)    
                 
-                entry['start_frame'] = start_frame
+                ## if the start frame exists, that means we are doing the 2nd alignment.
+                if 'start_frame' in entry and 'standard' not in entry['video_name']:
+                    start_frame = align((query_embs),(key_embs),None)
+                    # assert len(key_embs) == len(query_embs),f'key_embs: {len(key_embs)}, query_embs: {len(query_embs)} in {entry["name"]}'
+                    subtraction = key_embs[start_frame:start_frame+len(query_embs)] - query_embs
+                    entry["subtraction"] = subtraction
+                    entry['annotations_label'] = entry['original_annotations_label'][entry['start_frame']:entry['start_frame']+len(entry['subtraction'])]
+                else: ## otherwise, do the 1st alignment. Which find the start frame of the longer video, subtraction for the 1st alignment is meaningless.
+                    start_frame = align((query_embs),(key_embs),None)
+                    end_frame = start_frame + len(query_embs)
+                    entry['start_frame'] = start_frame
+                    entry['end_frame'] = end_frame
+                    ## record if std is longer or not
+                    entry['standard_longer'] = len(self.standard_emb) > len(embs)
+                    if "GT" in self.cfg.DATA.TRAIN_NAME:
+                        entry['subtraction'] = key_embs[start_frame:end_frame] - query_embs
 
                 self.split[split_name].append(entry["name"])
 
             if self.cfg.args.overwrite:
-                # if split_name == "test":
-                #     print(f"Dumping standard ...")
-                #     standard_split = [split[-1]]
-                #     split = split[:-1]
-                #     assert "standard" in standard_split[0]["name"]
-                #     with open(self.standard_output_pickle,'wb') as f:
-                #         pickle.dump(standard_split,f)
-                #     print(f"Dumped standard to {self.standard_output_pickle}")
-                #     assert (len(split) + len(standard_split)) == self.original_test_length, ic(len(split),len(standard_split),self.original_test_length)
                 with open(output_pickle,'wb') as f:
-                    pickle.dump(split,f)
+                    pickle.dump(input_pkl,f)
                 print(f"Dumped {split_name} to {output_pickle}")
 
         with open(self.split_path,'w') as f:

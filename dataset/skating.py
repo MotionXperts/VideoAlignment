@@ -42,13 +42,10 @@ class Skating(torch.utils.data.Dataset):
         else:
             with open(os.path.join(cfg.PATH_TO_DATASET, self.mode + '.pkl'), 'rb') as f:
                 self.dataset = pickle.load(f)
+
+        for a in self.dataset:
+            print(a['name'])
         
-        ### DANGEROUS!! REMOVE IT AFTER TRYING
-        if self.mode == "processed_videos_demo" :
-            for index in range(len(self.dataset)):
-                if "standard" in self.dataset[index]["name"]:
-                    print(f"found standard {index}")
-                    del self.dataset[index]
         
         if not self.sample_all:
             # logger.info(f"{len(self.dataset)} {self.split} samples of Pouring dataset have been read.")
@@ -85,8 +82,8 @@ class Skating(torch.utils.data.Dataset):
         video_file_field = "video_file"
 
         if self.cfg.args.prefix:
-            # frame_field = f"{self.cfg.args.prefix}_frame_label"
-            # seq_len_field = f"{self.cfg.args.prefix}_seq_len"
+            frame_field = f"{self.cfg.args.prefix}_frame_label"
+            seq_len_field = f"{self.cfg.args.prefix}_seq_len"
             video_file_field =  f"{self.cfg.args.prefix}_video_file"
 
         frame_label = self.dataset[index][frame_field]
@@ -97,53 +94,25 @@ class Skating(torch.utils.data.Dataset):
             if hasattr(self.cfg.DATA,'SKELETON_VIDEO') and self.cfg.DATA.SKELETON_VIDEO:
                 video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index]["skeleton_heatmap_file"])
             else:
-
-                video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index][video_file_field])
+                # video_file = os.path.join(self.cfg.PATH_TO_DATASET, self.dataset[index][video_file_field])
+                video_file = self.dataset[index][video_file_field]
             video, _, info = read_video(video_file, pts_unit='sec')
         
         video = video.permute(0,3,1,2).float() / 255.0 # T H W C -> T C H W, [0,1] tensor
 
         skeleton = 0
-        # if hasattr(self.cfg.DATA, "SKELETON") and self.cfg.DATA.SKELETON:
-        #     if "skeleton_file" in self.dataset[index]:
-        #         skeleton = {}
-        #         skeleton_file = self.dataset[index]["skeleton_file"] 
-        #         with open(skeleton_file,"r") as file:
-        #             json_skeletons = json.load(file)
-        #         for json_skeleton in json_skeletons:
-        #             image_id = json_skeleton["image_id"]
-        #             skeleton[image_id] = json_skeleton["keypoints"]
-        #         previous_image_id = -1
-
-        #         tmp_skeleton = skeleton.copy()
-
-        #         for image_id in (skeleton):
-        #             int_image_id = int(image_id.split(".jpg")[0])
-        #             if previous_image_id +1 !=int_image_id:
-        #                 while previous_image_id+1 != int_image_id:
-        #                     ## this will mend missing frame using next known frame (e.g: if 22 and 25 are known, then 23 and 24 will be filled with 25)
-        #                     tmp_skeleton[str(previous_image_id+1).zfill(4)+".jpg"] = skeleton[image_id] 
-        #                     previous_image_id +=1
-        #             previous_image_id = int_image_id
-
-        #         tmp_skeleton_length = len(tmp_skeleton)
-        #         while tmp_skeleton_length < seq_len:
-        #             tmp_skeleton[str(tmp_skeleton_length).zfill(4)+".jpg"] = skeleton[image_id]
-        #             tmp_skeleton_length +=1
-
-
-        #         tmp_skeleton = dict(sorted(tmp_skeleton.items(), key=lambda item: int(item[0].split(".jpg")[0])))
-
-        #         skeleton = torch.from_numpy(np.array(list(tmp_skeleton.values()))).type_as(video)
-
-
 
         if self.train is None:
-            
-            assert abs(len(video) - seq_len) <= 1, f"{len(video)} and {seq_len} is not the same in {name}."
-            # if len(video) - len(frame_label)==1: ## THIS IS SO BAD
-            #     frame_label = torch.ones(len(video))
-            assert abs(len(video)- len(frame_label)) <= 1, f"{len(video)} and {len(frame_label)} is not the same in {name}."
+            frame_label = torch.ones(len(video))
+            seq_len = len(video)
+
+            if not self.cfg.args.second_align: ## Because trimming will introduce error b/t video and sequence length, dont do check when second align.
+                assert abs(len(video) - seq_len) < 1, f"{len(video)} and {seq_len} is not the same in {name}."
+            if len(video) - len(frame_label)==1: ## THIS IS SO BAD, but frame_label MUST be the same length as video otherwise "frame_label[chosen_step_1.long()]" raises error.
+                frame_label = torch.ones(len(video))
+            if len(frame_label) - len(video)==1:
+                frame_label = frame_label[:-1]
+            assert abs(len(video)- len(frame_label)) < 1, f"{len(video)} and {len(frame_label)} is not the same in {name}."
 
         if self.cfg.SSL and not self.sample_all and self.algo=="scl" :
             names = [name, name]
@@ -192,7 +161,6 @@ class Skating(torch.utils.data.Dataset):
         label = frame_label[chosen_steps.long()]
 
         return original_video,video, label, torch.tensor(seq_len), chosen_steps, video_mask, name,skeleton
-        # return video, label, torch.tensor(seq_len), steps, video_mask, name ## if we return steps (40) instead of chosen steps (20), there will be expandsion prob in tcc loss.
 
     def sample_frames(self, seq_len, num_frames, pre_steps=None):
         # When dealing with very long videos we can choose to sub-sample to fit

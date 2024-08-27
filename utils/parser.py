@@ -16,7 +16,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="TCC training pipeline.")
     parser.add_argument('--local_rank', default=0, type=int, help='rank in local processes')
 
-    parser.add_argument('--path_to_dataset', type=str, default=None, help='overwrite the default path to dataset, note that only type in the path after ``datasets``.')
+    parser.add_argument('--path_to_dataset', type=str, default=None, help='overwrite the default path to dataset.')
 
     ## should be set to 0 when debugging with vscode according to https://blog.csdn.net/qianbin3200896/article/details/108182504
     parser.add_argument('--num_workers',type=int,default=None,help='overwrite th Number of workers for dataloader, used when debugging.')
@@ -52,7 +52,6 @@ def parse_args():
     
     parser.add_argument('--ckpt',default=None,type=str,help='Path to checkpoint')
     parser.add_argument("--generate",action="store_true",default=False)
-    parser.add_argument('--tsne',action="store_true",default=False,help='Whether to ONLY OUTPUT tsne')
     parser.add_argument("--carl",action="store_true",default=False)
     parser.add_argument("--no_compute_metrics",action="store_true",default=False)
     parser.add_argument("--nc",action="store_true",default=False)
@@ -62,12 +61,14 @@ def parse_args():
     parser.add_argument("--candidate",default=None,type=int)
     parser.add_argument("--random",default=0,type=int)
     parser.add_argument("--overwrite",action="store_true",default=False)
-    parser.add_argument('--use_ori',action="store_true",default=False)
     parser.add_argument('--eval_multi',action="store_true",default=False)
 
-    parser.add_argument('--abs_pkl',default=None,type=str)
-
     parser.add_argument('--prefix',default=None,type=str)
+    parser.add_argument('--second_align',action="store_true",default=False)
+    parser.add_argument('--abs_pkl',default=None,type=str,help='absolute path to the pkl file')
+    parser.add_argument('--tsne',default=False,action='store_true')
+    parser.add_argument('--stop_frame',default=None,type=int,help='stop frame in the coach video, some choices: basketball: 138')
+    parser.add_argument('--group',default=None,type=str,help='group name')
 
     args = parser.parse_args()
 
