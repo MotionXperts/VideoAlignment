@@ -1,3 +1,7 @@
-result/
+result/*
+!result/Axel_single_jump/config.yaml
+!result/Axel_double_jump/config.yaml
+!result/Lutz_double_jump/config.yaml
+!result/Loop_double_jump/config.yaml
 **/__pycache__
 **/.ipynb*
