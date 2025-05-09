@@ -1,4 +1,8 @@
 result/*
+!result/Axel_single_jump/
+!result/Axel_double_jump/
+!result/Lutz_double_jump/
+!result/Loop_double_jump/
 !result/Axel_single_jump/config.yaml
 !result/Axel_double_jump/config.yaml
 !result/Lutz_double_jump/config.yaml
